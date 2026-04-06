@@ -1,0 +1,2 @@
+rootProject.name = 'ics-modernization-repo'
+include('services:authorization-service', 'shared:contracts', 'shared:common')

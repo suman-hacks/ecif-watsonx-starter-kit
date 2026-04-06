@@ -1,0 +1,14 @@
+plugins {
+    id 'base'
+}
+
+allprojects {
+    group = 'com.usbank.payments'
+    version = '0.1.0-SNAPSHOT'
+}
+
+subprojects {
+    repositories {
+        mavenCentral()
+    }
+}

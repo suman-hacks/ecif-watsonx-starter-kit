@@ -1,0 +1,11 @@
+{
+  "moduleId": "ICSAUTHZ",
+  "rules": [
+    {
+      "ruleId": "BR-001",
+      "description": "",
+      "sourceReference": "",
+      "confidence": ""
+    }
+  ]
+}
