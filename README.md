@@ -1,4 +1,4 @@
-# FORGE — Framework for Orchestrated AI-Guided Engineering
+# FORGE — AI-Powered Framework for Orchestrated, Reliable Guided Engineering
 
 > **The Enterprise AI Engineering Framework — From Legacy to Modern, From Requirement to Release**
 
