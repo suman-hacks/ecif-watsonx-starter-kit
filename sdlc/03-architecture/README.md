@@ -33,3 +33,13 @@
 | `P2-service-decomposition.md` | Design service/bounded context map |
 | `P3-api-contract-design.md` | Design REST and event contracts |
 | `P4-architecture-review.md` | Review a proposed architecture |
+
+## Templates and Skills
+
+| Resource | Purpose |
+|---|---|
+| [templates/architecture/adr-template.md](../../templates/architecture/adr-template.md) | ADR template for all architectural decisions |
+| [templates/architecture/openapi-spec-template.yaml](../../templates/architecture/openapi-spec-template.yaml) | OpenAPI 3.1 spec template — the source of truth for API contracts |
+| [templates/architecture/service-design-template.md](../../templates/architecture/service-design-template.md) | Service design document template |
+| `/generate-openapi-spec` (Claude skill) | Auto-generate an OpenAPI 3.1 spec from a Stage 2 design document |
+| `/create-adr` (Claude skill) | Auto-generate an ADR from a decision description |

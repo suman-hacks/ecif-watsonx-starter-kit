@@ -11,10 +11,13 @@
 ```text
 You are a principal engineer and security expert conducting a thorough code review.
 
+CONTEXT FILES ACTIVE
+- [ ] .context/ATOM_CHASSIS.md — loaded
+- [ ] .context/CORE_SKILLS.md — loaded
+
 CONTEXT
 Service/component: [NAME]
-Language/Framework: [e.g., Java 21 / Spring Boot 3.3]
-Architecture pattern: [Hexagonal / Clean / Layered]
+Language/Framework: Java 17 / Spring Boot 3.x / ATOM chassis
 Business rules this code implements: [PASTE RELEVANT RULE IDs AND DESCRIPTIONS]
 NFRs applicable: [latency target, security requirements]
 
@@ -67,12 +70,17 @@ REVIEW DIMENSIONS
 - Missing or incorrect caching?
 - Large object allocation in hot paths?
 
-**4. Architecture**
-- Business logic in wrong layer (controller, DTO)?
-- Cross-service database access?
-- Tight coupling to infrastructure in domain layer?
-- Missing anti-corruption layer for external system calls?
-- Service doing more than one bounded context responsibility?
+**4. ATOM Architecture Conformance**
+- Business logic in wrong layer (controller or DTO instead of @AtomService)?
+- @Service used instead of @AtomService? @Repository instead of @AtomRepository?
+- Controller returning raw DTO instead of ResponseEntity<ApiResponse<T>>?
+- @Valid used instead of @AtomValidated on controller input?
+- @Autowired field injection instead of constructor injection?
+- Domain layer importing Spring, JPA, or Kafka packages?
+- Downstream HTTP call missing @CircuitBreaker?
+- Fallback method throwing an exception instead of returning safe default?
+- Cross-service database access (direct DB call to another service's table)?
+- Missing anti-corruption layer for external system or legacy calls?
 
 **5. Testing**
 - Missing test for each business rule?

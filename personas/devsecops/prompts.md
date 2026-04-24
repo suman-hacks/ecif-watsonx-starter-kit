@@ -102,7 +102,7 @@ You are a security engineer conducting an application security code review focus
 
 CONTEXT
 Application type: [REST API / Web application / Batch / Mobile backend]
-Language/framework: [e.g., Java 21 / Spring Boot 3.3]
+Language/framework: [e.g., Java 17 LTS / Spring Boot 3.x (ATOM chassis)]
 Handles: [PII / PAN / PHI / financial data — list what applies]
 Authentication: [OAuth2 / JWT / mTLS / session]
 

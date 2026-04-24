@@ -1,364 +1,346 @@
 # Project: [PROJECT NAME]
-## Framework: FORGE v1.0 — Framework for Orchestrated AI-Guided Engineering
+# Framework: FORGE v2.0 + ATOM Microservices Chassis
+
+> Copy this file to the root of your project repository as `CLAUDE.md`.
+> Fill in every `[USER FILLS]` section. Commit it so the whole team benefits.
+> Claude Code reads this file automatically every session.
 
 ---
 
 ## Project Overview
 
-[USER FILLS: Write 2–3 sentences describing what this system does, who uses it, and why it exists. Example: "This system is a card authorization service that processes real-time payment authorization requests for a retail banking platform. It receives authorization requests from acquiring networks, applies business rules, and returns approve/decline decisions within 150ms. The system is currently implemented in COBOL on z/OS and is being modernized to Java/Spring Boot."]
+[USER FILLS: 2–3 sentences. What does this system do? Who uses it? Why does it exist?
+
+Example: "This is the Payment Authorization Service — it processes real-time card authorization
+requests from acquiring networks, applies business rules and spending limits, and returns
+approve/decline decisions within 150ms. The system is being modernized from COBOL/z/OS
+to Java/Spring Boot using the ATOM chassis."]
 
 ---
 
 ## Project Type
 
 [USER SELECTS ONE — delete the others]
-
 - Greenfield — building a new system from scratch
 - Brownfield (Distributed) — extending or modernizing an existing Java/Python/Node codebase
-- Mainframe Modernization — transforming COBOL/PL1/Assembler/JCL on z/OS to modern languages
-- Cloud Migration — migrating an existing application to AWS/Azure/GCP/IBM Cloud
-- API Modernization — exposing legacy functionality via REST/GraphQL/AsyncAPI
+- Mainframe Modernization — transforming COBOL/PL1/Assembler/JCL on z/OS to Java via ATOM
+- Cloud Migration — migrating an existing application to cloud
+- API Modernization — exposing legacy functionality via REST/AsyncAPI
 
 ---
 
 ## Tech Stack
 
 ### Source / Legacy (if applicable)
-[USER FILLS — e.g., COBOL II, CICS TS 5.6, IMS DB 15, DB2 for z/OS 12, JCL, VSAM]
+[USER FILLS: e.g., COBOL II, CICS TS 5.6, IMS DB 15, DB2 for z/OS 12, JCL, VSAM, IBM MQ 9.3]
 
-### Target / Current
-- **Primary language**: [USER FILLS — e.g., Java 17, Python 3.12, Go 1.22]
-- **Framework**: [USER FILLS — e.g., Spring Boot 3.2, FastAPI 0.110, Gin 1.9]
-- **Build tool**: [USER FILLS — e.g., Maven 3.9, Gradle 8.5, Poetry]
-- **Databases**: [USER FILLS — e.g., PostgreSQL 16, MongoDB 7, IBM Db2 LUW 11.5]
-- **Messaging**: [USER FILLS — e.g., Apache Kafka 3.7, IBM MQ 9.3, AWS SQS]
-- **Cloud platform**: [USER FILLS — e.g., AWS (EKS, RDS, SQS), Azure (AKS, Cosmos DB), IBM Cloud]
-- **Infrastructure as code**: [USER FILLS — e.g., Terraform 1.8, AWS CDK v2, Helm 3]
-- **CI/CD**: [USER FILLS — e.g., GitHub Actions, Jenkins, Tekton, GitLab CI]
-- **Observability**: [USER FILLS — e.g., Datadog, Prometheus + Grafana, IBM Instana]
+### Target (ATOM Chassis)
+- **Language:** Java 17 LTS
+- **Framework:** Spring Boot 3.x (ATOM chassis)
+- **Build tool:** [Maven 3.9 | Gradle 8.x]
+- **Databases:** [USER FILLS: e.g., PostgreSQL 16, IBM Db2 LUW 11.5]
+- **Messaging:** [USER FILLS: e.g., Apache Kafka 3.7, IBM MQ 9.3]
+- **Cloud platform:** [USER FILLS: e.g., AWS EKS, Azure AKS, IBM Cloud]
+- **CI/CD:** [USER FILLS: e.g., GitHub Actions, Jenkins, Tekton]
+- **Observability:** [USER FILLS: e.g., Splunk (via ATOM structured logging), Prometheus, Datadog]
+
+---
+
+## Context Engine — Always Load
+
+These files are loaded every session. Reference them when making any code or architecture decision.
+
+### `.context/CORE_SKILLS.md`
+Universal engineering guardrails — security, code quality, testing, observability standards.
+**Always active.** Never violate a rule in this file without flagging it explicitly.
+
+### `.context/ATOM_CHASSIS.md`
+ATOM microservices chassis patterns — annotations, layers, response format, resilience config.
+**Load for any ATOM service work.** When generating code, always apply ATOM patterns.
+
+### `.context/MODERNIZATION.md`
+Legacy modernization rules — COBOL→Java data type mapping, Strangler Fig pattern, behavioral preservation.
+**Load for any legacy migration work.**
 
 ---
 
 ## FORGE Constitution — Always Active
 
-These 10 rules are non-negotiable and apply to every response in every session. Do not deviate from them under any circumstances.
+These 12 rules are non-negotiable and apply to every response in every session.
 
 **Rule 1 — Do not invent business logic.**
-Never generate code that encodes a business rule not present in a provided source artifact (legacy code, specification, requirement, or ADR). If a business rule is needed but not documented, flag it as an open question and ask the user to clarify before generating code.
+Never generate code that encodes a business rule not present in a provided source artifact. If a rule is needed but not documented, flag it as an open question.
 
 **Rule 2 — Preserve existing business behavior.**
-When modernizing or refactoring, preserve existing behavior precisely unless a change is explicitly requested. A behavioral change must be requested, acknowledged, and recorded in the assumption register before it is implemented.
+When modernizing, preserve existing behavior precisely unless a change is explicitly requested and documented in the assumption register.
 
 **Rule 3 — Separate facts from assumptions from recommendations.**
-In every substantive response, clearly distinguish:
-- **FACT**: Information sourced from a provided artifact (cite the artifact)
-- **ASSUMPTION**: Something assumed in the absence of explicit information (must be stated)
-- **RECOMMENDATION**: A suggested approach based on analysis (must be labeled as such)
-- **OPEN QUESTION**: An ambiguity that needs human clarification before proceeding
+Label every significant claim: `FACT` (from artifact, cite it) | `ASSUMPTION` (stated with confidence) | `RECOMMENDATION` (labeled as such) | `OPEN QUESTION` (needs clarification).
 
 **Rule 4 — Prefer modular, testable, observable code.**
-All generated code must be structured for testability (dependency injection, no hidden global state, interface-based design). Every generated module must include or be accompanied by unit tests. Generated code must emit structured logs for all significant decisions and errors.
+All generated code must be structured for testability (DI, no hidden state, interface-based design). Every generated module includes unit tests. All code emits structured logs.
 
 **Rule 5 — Traceability is mandatory.**
-Every generated output (code, design, ADR, specification) must be traceable to a source artifact (legacy code file, requirement ID, user story ID) or a declared assumption. Never generate output that cannot be explained and justified to a human reviewer.
+Every generated output must be traceable to: a source artifact, a requirement ID (BR-NNN, US-NNN), or a declared assumption. Never generate output that cannot be justified to a human reviewer.
 
 **Rule 6 — Flag ambiguity before proceeding.**
-If a task description contains ambiguity, missing information, or conflicting requirements, stop and ask focused clarifying questions before generating any output. Do not make silent assumptions about ambiguous inputs.
+If a task contains ambiguity or conflicting requirements, stop and ask focused clarifying questions. Do not make silent assumptions about ambiguous inputs.
 
 **Rule 7 — Data protection is absolute.**
-Never include, request, or generate content containing:
-- Real customer PII (names, addresses, account numbers, social security numbers)
-- Payment card data (PAN, CVV, expiry dates)
-- Authentication credentials (passwords, API keys, tokens, private keys)
-- Production database connection strings
-- Confidential or proprietary business logic that has not been explicitly approved for AI processing
-If asked to include such content, refuse and explain the policy.
+Never include, generate, or accept: real customer PII, PAN (card numbers), CVV, passwords, API keys, tokens, or production connection strings. If asked to include such content, refuse and explain.
 
 **Rule 8 — Default to incremental change.**
-Prefer reversible, incremental changes over big-bang transformations. For modernization, prefer a strangler fig or side-by-side approach over complete replacement. Flag any proposed change that is difficult to reverse.
+Prefer reversible, incremental changes over big-bang transformations. For modernization, prefer Strangler Fig over complete replacement. Flag any proposed change that is hard to reverse.
 
-**Rule 9 — Follow approved architectural patterns.**
-All generated code must conform to the architectural patterns defined in the `### Architectural Patterns` section of this file. Do not introduce new patterns, frameworks, or libraries without explicit approval. Flag any situation where the patterns are insufficient for the task.
+**Rule 9 — Follow approved ATOM architectural patterns.**
+All generated code must conform to ATOM patterns in `.context/ATOM_CHASSIS.md`. Do not introduce new patterns or libraries without an ADR. Flag situations where ATOM patterns are insufficient.
 
 **Rule 10 — Produce human-reviewable outputs.**
-All generated code must be readable, well-commented at decision points, and structured to allow a domain-knowledgeable human engineer to verify correctness without running the code. Avoid clever or overly compact implementations that sacrifice readability.
+All generated code must be readable, commented at decision points, and structured so a domain-knowledgeable engineer can verify correctness without running it.
+
+**Rule 11 — Observable systems.**
+All generated code must emit structured logs with correlation ID, service ID, operation name, and business-meaningful fields. Never generate code without observability.
+
+**Rule 12 — Honest uncertainty.**
+When uncertain, say so explicitly with a confidence level (HIGH/MEDIUM/LOW/NONE) and what source material would resolve the uncertainty. Never present a guess as a fact.
+
+---
+
+## ATOM Architectural Patterns
+
+### Package Structure
+```
+com.[org].[domain].[service-name]
+├── api/
+│   ├── controller/          ← @RestController. Returns ResponseEntity<ApiResponse<T>>.
+│   ├── dto/                 ← Immutable request/response DTOs (@Value, Bean Validation)
+│   └── mapper/              ← MapStruct mappers (DTO ↔ Domain)
+├── application/
+│   └── service/             ← @AtomService. Business logic. No persistence logic.
+├── domain/
+│   ├── model/               ← Entities, value objects, aggregates
+│   ├── service/             ← Pure domain services (no framework dependencies)
+│   ├── port/
+│   │   ├── inbound/         ← Use case interfaces
+│   │   └── outbound/        ← Repository and external client interfaces
+│   └── exception/           ← Domain exceptions (extend RuntimeException)
+├── infrastructure/
+│   ├── persistence/         ← JPA entities + @AtomRepository implementations
+│   ├── client/              ← External HTTP clients (with @CircuitBreaker)
+│   ├── messaging/           ← Kafka listeners/producers
+│   └── config/              ← @Configuration classes
+└── [ServiceName]Application.java
+```
+
+### Dependency Direction
+Infrastructure → Application → Domain. The domain layer must have ZERO Spring/JPA/Kafka imports.
+
+### ATOM Annotations (Required)
+- `@AtomService` — on all application service classes (not plain `@Service`)
+- `@AtomRepository` — on all repository implementation classes
+- `@AtomValidated` — on controller request body parameters (not plain `@Valid`)
+- `@CircuitBreaker(name="service-name")` — on all downstream HTTP calls
+- `@Slf4j` — on all classes that log (Lombok)
+
+### Response Format
+All controllers return `ResponseEntity<ApiResponse<T>>`. Never return raw DTOs. Never build custom error responses — ATOM's `@ControllerAdvice` handles error mapping.
+
+### Logging (Mandatory)
+```java
+// Always structured key-value pairs — never string concatenation in logs
+log.info("Authorization processed",
+    "operation", "authorize",
+    "transactionId", txId,
+    "decision", decision,
+    "durationMs", duration);
+```
+Never log: PAN, CVV, passwords, tokens, SSN. Log only masked identifiers.
+
+### Resilience
+All downstream HTTP calls annotated with `@CircuitBreaker(name="...", fallbackMethod="...")`.
+Fallback methods must never throw — return a safe default value.
+Config in `application.yml` under `resilience4j.circuitbreaker.instances`.
+
+### Constructor Injection
+Always use constructor injection. Never `@Autowired` field injection. Use Lombok `@RequiredArgsConstructor`.
 
 ---
 
 ## AI Behavior Rules
 
-Beyond the constitution, apply these behavioral rules in all responses:
-
-- **Be source-grounded**: When making a claim about the system, cite the source. "According to `AUTHZ0100.cbl`, the authorization timeout is 30 seconds." Not: "The timeout is probably 30 seconds."
-- **Be explicit about confidence**: If you are not certain about a claim, say so. Use language like "I believe this is the case but you should verify against the production configuration."
-- **Use project terminology consistently**: Use the domain terms established in `### Domain Vocabulary` below. Do not substitute generic terms for project-specific ones.
-- **Ask one focused question at a time**: When you need clarification, ask the most important question first. Do not dump a list of 10 questions.
-- **Never silently change behavior**: If your generated code behaves differently from the legacy code in any way, explicitly call this out with a `BEHAVIORAL CHANGE` notice.
-- **Generate tests alongside code**: For every non-trivial generated class or function, generate corresponding unit tests in the same response. Tests must cover: the happy path, known edge cases, and error conditions.
-- **Flag security concerns immediately**: If you notice a security vulnerability, injection risk, insecure credential handling, or missing authorization check in code you are reviewing or generating, flag it with `[SECURITY CONCERN]` immediately.
-
----
-
-## Architectural Patterns
-
-[USER FILLS — Describe the approved architectural patterns for this project. Be specific. Examples below.]
-
-### Layered Architecture
-[USER FILLS — e.g., "This project uses hexagonal (ports and adapters) architecture. The domain layer has no framework dependencies. All external integrations (database, messaging, HTTP) are behind interfaces defined in the domain layer and implemented in the infrastructure layer."]
-
-### Service Communication
-[USER FILLS — e.g., "Services communicate asynchronously via Kafka. Synchronous REST is only used for read-heavy query APIs. All Kafka messages use Avro schemas registered in the Schema Registry."]
-
-### Data Access
-[USER FILLS — e.g., "Repositories are the only entry point to the database. No raw SQL outside of repository implementations. Use Spring Data JPA for standard CRUD; named native queries for complex reports."]
-
-### Error Handling
-[USER FILLS — e.g., "All service exceptions are mapped to domain exceptions before propagating. HTTP responses use RFC 7807 Problem Details format. All errors are logged at WARN or ERROR with a correlation ID."]
-
-### Security
-[USER FILLS — e.g., "All endpoints require a valid JWT from the internal identity provider. Authorization is attribute-based (ABAC) using Spring Security. Never perform authorization checks in business logic — only in the security layer."]
+- **Be source-grounded:** When making claims about the system, cite the source file and line. "According to `AUTHZ0100.cbl` line 245, the timeout is 30 seconds." Not: "The timeout is probably 30 seconds."
+- **Behavioral changes:** If generated code behaves differently from legacy code in any way, explicitly call this out: `// [BEHAVIORAL CHANGE: CBD-NNN] Legacy did X; modern does Y. Approval required.`
+- **Generate tests alongside code:** For every non-trivial class or function, generate corresponding unit tests in the same response. Tests cover: happy path, all business rules (BR-NNN), boundary values, error conditions.
+- **Flag security concerns immediately:** Any security vulnerability gets: `[SECURITY: SG-N] Issue: ... Location: ... Recommendation: ...`
+- **Confirm stage gates:** Before generating code, confirm that: Stage 1 (analysis) is complete, business rules are extracted and numbered, and target design is approved.
 
 ---
 
 ## Code Generation Standards
 
 ### Language and Style
-- **Language version**: [USER FILLS — e.g., Java 17 LTS with preview features disabled]
-- **Style guide**: [USER FILLS — e.g., Google Java Style Guide, enforced by Checkstyle]
-- **Formatter**: [USER FILLS — e.g., google-java-format 1.22, enforced in CI]
+- **Language version:** Java 17 LTS (preview features disabled)
+- **Style:** Google Java Style Guide — 120-char line limit
+- **Formatter:** [USER FILLS: e.g., google-java-format 1.22, enforced in CI]
+- **Lombok:** `@Value` (immutable), `@Builder`, `@Slf4j`, `@RequiredArgsConstructor`
 
 ### Test Framework
-- **Unit tests**: [USER FILLS — e.g., JUnit 5 + Mockito 5 + AssertJ]
-- **Integration tests**: [USER FILLS — e.g., Spring Boot Test + Testcontainers 3]
-- **Test naming convention**: [USER FILLS — e.g., `methodName_scenario_expectedResult`]
-- **Coverage requirement**: [USER FILLS — e.g., 80% line coverage enforced by JaCoCo in CI]
-
-### Package Structure
-[USER FILLS — e.g.,
-```
-com.example.projectname
-  ├── domain/           ← Domain model, domain services, ports (interfaces)
-  │   ├── model/        ← Entities, value objects, aggregates
-  │   ├── service/      ← Domain services
-  │   └── port/         ← Inbound and outbound port interfaces
-  ├── application/      ← Application services, use case orchestration
-  ├── infrastructure/   ← Adapters: REST, Kafka, JPA, external APIs
-  │   ├── rest/
-  │   ├── messaging/
-  │   ├── persistence/
-  │   └── client/
-  └── configuration/    ← Spring configuration, bean definitions
-```
-]
+- **Unit tests:** JUnit 5 + Mockito 5 + AssertJ
+- **Integration tests:** @SpringBootTest + Testcontainers 3
+- **Naming:** `methodName_scenario_expectedBehavior`
+- **Structure:** Arrange / Act / Assert (AAA) with explicit comments
+- **Coverage:** 80% line, 90% branch on business logic. Enforced by JaCoCo.
 
 ### Naming Conventions
-- **Classes**: [USER FILLS — e.g., PascalCase. Suffix conventions: `Service`, `Repository`, `Controller`, `Adapter`, `Port`, `Config`]
-- **Methods**: [USER FILLS — e.g., camelCase. Command methods: verb-first (`processAuthorization`). Query methods: noun or `get`/`find`-prefixed]
-- **Constants**: [USER FILLS — e.g., SCREAMING_SNAKE_CASE in a dedicated `Constants` class per domain area]
-- **Database tables**: [USER FILLS — e.g., snake_case, prefixed by domain area: `authz_transactions`, `authz_limits`]
-- **Kafka topics**: [USER FILLS — e.g., kebab-case with environment prefix: `prod.authz.transaction-processed`]
+- **Classes:** PascalCase. Suffixes: `Service` (application), `DomainService` (domain), `Repository` (port interface), `JpaRepository` (implementation), `Controller`, `Adapter`, `Client`, `Config`, `Event`, `Command`
+- **Methods:** camelCase. Commands: verb-first (`processAuthorization`). Queries: `get`/`find`-prefixed
+- **Constants:** `SCREAMING_SNAKE_CASE` in dedicated `Constants` class per domain area
+- **Database tables:** snake_case, domain-prefixed: `authz_transactions`, `authz_limits`
+- **Kafka topics:** kebab-case, environment-prefixed: `prod.authz.transaction-authorized`
 
-### Dependency Rules
-[USER FILLS — e.g., "Never introduce new third-party dependencies without an ADR. Approved dependencies are listed in the approved-dependencies.md. Spring Boot BOM manages versions — never specify a version for a dependency covered by the BOM."]
+### Dependencies
+[USER FILLS: List approved dependencies. Example:]
+- Spring Boot 3.x BOM (manages versions for starter-web, starter-data-jpa, starter-security, starter-actuator)
+- ATOM chassis library: `[org]-atom-chassis:[version]`
+- Kafka: `spring-kafka`
+- Resilience4j: `resilience4j-spring-boot3`
+- PostgreSQL driver: `org.postgresql:postgresql`
+- Flyway: `org.flywaydb:flyway-core`
+- Lombok: `org.projectlombok:lombok`
+- MapStruct: `org.mapstruct:mapstruct`
+- Testcontainers: `testcontainers-bom:[version]`
 
 ---
 
 ## Repository Structure
 
-[USER FILLS — Describe the key directories in your project repository and their purpose. Example:]
+[USER FILLS: Map key directories to their purpose. Example:]
 
 ```
 [project-repo]/
+├── .context/                      ← FORGE Context Engine (copy from FORGE repo)
+│   ├── CORE_SKILLS.md
+│   ├── ATOM_CHASSIS.md
+│   └── MODERNIZATION.md
+├── CLAUDE.md                      ← This file
 ├── .github/
-│   ├── copilot-instructions.md    ← GitHub Copilot configuration (FORGE template)
-│   └── workflows/                 ← GitHub Actions CI/CD pipelines
-├── CLAUDE.md                      ← This file. Claude Code configuration.
+│   ├── copilot-instructions.md    ← GitHub Copilot configuration
+│   └── workflows/                 ← CI/CD pipelines
 ├── docs/
-│   ├── architecture/              ← ADRs and architecture diagrams
-│   ├── business-rules/            ← Extracted and validated business rules
+│   ├── architecture/              ← ADRs (adr-NNN-title.md)
+│   ├── business-rules/            ← Extracted and validated BR-NNN register
 │   └── runbooks/                  ← Operational runbooks
-├── legacy-artifacts/              ← READ ONLY. Source COBOL/legacy code. Never modify.
-│   ├── cobol/
-│   ├── jcl/
-│   └── copybooks/
-├── src/
-│   ├── main/java/                 ← Java source code
-│   └── test/java/                 ← Test source code
+├── legacy-artifacts/              ← READ ONLY. Never modify.
+│   ├── cobol/                     ← Source COBOL programs
+│   ├── jcl/                       ← JCL scripts
+│   └── copybooks/                 ← COBOL copybooks
+├── src/main/java/                 ← Java source
+├── src/test/java/                 ← Test source
 ├── infra/
 │   ├── terraform/                 ← Infrastructure as code
 │   └── helm/                      ← Kubernetes Helm charts
 └── traceability/
-    ├── assumption-register.md     ← All declared assumptions
+    ├── assumption-register.md     ← All declared assumptions (BR-NNN, CBD-NNN)
     └── decision-log.md            ← All architectural decisions
 ```
 
 ---
 
-## Custom Slash Commands
+## FORGE Skills (Slash Commands)
 
-Use these commands in Claude Code sessions to trigger FORGE workflows. Type the command to receive a structured response following the FORGE workflow for that task.
+These slash commands trigger FORGE workflows. See `tool-setup/claude-code/SKILLS.md` for full documentation.
 
-### `/analyze-legacy`
-Triggers the legacy analysis workflow. Claude will:
-1. Read and parse the provided legacy source file(s)
-2. Identify and document: program purpose, input/output data structures, business rules, external dependencies (CICS calls, DB2 SQL, file I/O, called programs), and error handling paths
-3. Output a structured analysis document with FACT/ASSUMPTION labels
-4. List all open questions that must be resolved before modernization begins
-5. Produce an initial traceability mapping (legacy program → candidate modern component)
-
-Usage: `/analyze-legacy [paste the COBOL source or provide the file path]`
-
-### `/generate-code`
-Triggers the target-state code generation workflow. Claude will:
-1. Confirm that legacy analysis (Stage 1) and target mapping (Stage 2) are complete
-2. Generate the Java/target-language implementation based on the provided specification
-3. Include unit tests in the same response
-4. Label any behavioral differences from the legacy code as `[BEHAVIORAL CHANGE: reason]`
-5. Produce a traceability table: generated class → source legacy program → source business rule
-
-Usage: `/generate-code [provide the specification or design document]`
-
-### `/review-code`
-Triggers the code review workflow. Claude will review the provided code for:
-1. **Correctness**: Does it implement the specified behavior?
-2. **Architectural conformance**: Does it follow the patterns in `### Architectural Patterns`?
-3. **Security**: Any security vulnerabilities, missing authorization checks, injection risks?
-4. **Testability**: Is the code structured for testability? Are tests present and meaningful?
-5. **Observability**: Are appropriate logs and metrics emitted?
-6. **FORGE compliance**: Does it meet all 10 constitution rules?
-
-Output format: Findings organized as Critical / Major / Minor with file:line references.
-
-Usage: `/review-code [paste the code or provide file paths]`
-
-### `/extract-rules`
-Triggers the business rule extraction workflow. Claude will:
-1. Analyze the provided source code or documentation
-2. Extract and classify business rules: validation rules, calculation rules, routing rules, error handling rules, limit/threshold rules
-3. Format each rule as: Rule ID | Rule Statement | Source Location | Confidence | Open Questions
-4. Flag rules that are ambiguous, implicit, or potentially outdated
-5. Produce an assumption register entry for any assumed rules
-
-Usage: `/extract-rules [paste the legacy code, document, or specification]`
-
-### `/create-tests`
-Triggers the test generation workflow. Claude will:
-1. Analyze the provided code or specification
-2. Generate a test strategy: what to unit test, what to integration test, what edge cases to cover
-3. Generate unit tests using the project's test framework (see `### Code Generation Standards`)
-4. Generate integration test scaffolding using Testcontainers where applicable
-5. Include at minimum: happy path, boundary values, error conditions, and concurrency scenarios where relevant
-
-Usage: `/create-tests [paste the code or specification to test]`
-
-### `/create-adr`
-Triggers the Architecture Decision Record generation workflow. Claude will:
-1. Produce an ADR in the project's approved format
-2. Sections: Title, Status, Context, Decision, Consequences, Alternatives Considered
-3. All facts cited to source artifacts; all assumptions explicitly labeled
-4. Flag any architectural risks associated with the decision
-
-Usage: `/create-adr [describe the architectural decision that needs to be recorded]`
-
-### `/map-data`
-Triggers the data mapping workflow. Claude will:
-1. Map source data structures (COBOL copybooks, VSAM layouts, DB2 tables) to target data models
-2. Flag type mismatches, precision differences, and encoding differences (EBCDIC vs. UTF-8, packed decimal vs. BigDecimal)
-3. Generate a data mapping specification in tabular format
-4. Identify data migration risks and required transformation logic
-
-Usage: `/map-data [provide source and target data structures]`
+| Command | Triggers |
+|---|---|
+| `/analyze-legacy [file or paste]` | Stage 1 Legacy Understanding workflow |
+| `/extract-rules [source]` | Business rule extraction and numbering |
+| `/generate-service [spec]` | Stage 3 Code Generation (requires Stages 1+2 complete) |
+| `/generate-atom-service` | Scaffold new ATOM service from scratch |
+| `/review-code [files]` | Stage 4 Review and Hardening workflow |
+| `/create-tests [code or spec]` | Test suite generation |
+| `/map-data [source + target]` | COBOL copybook → Java domain model mapping |
+| `/create-adr [description]` | Architecture Decision Record generation |
+| `/pre-engagement` | Run full 5-task pre-engagement analysis |
+| `/explain-legacy [code]` | Plain English explanation for non-technical audience |
+| `/runbook [service]` | Operational runbook generation |
+| `/generate-openapi-spec [design doc]` | Generate OpenAPI 3.1 spec from Stage 2 design (spec-first) |
+| `/package-delivery [stage + artifacts]` | Package stage artifacts into a traceable delivery package |
 
 ---
 
-## Workflow
-
-FORGE defines four stages for modernization work. Never skip or reorder stages for a given module.
+## FORGE Workflow Stages
 
 ```
-STAGE 1: Legacy Understanding
-  → Read and analyze source code and documentation
-  → Extract business rules, data structures, dependencies
-  → Produce: structured analysis, open questions, initial traceability map
-  → Gate: all open questions resolved before Stage 2
+Stage 0: Pre-Engagement Analysis  (/pre-engagement)
+  → Analyze codebase before workshop. Produce TX_ARCH.md, TX_DECISION_INVENTORY.md,
+    TX_INTEGRATIONS.md, TX_RISK_MAP.md, TX_POC_OPTIONS.md
 
-STAGE 2: Target Mapping
-  → Map legacy components to modern target components
-  → Define data mappings, behavior specifications, interface contracts
-  → Produce: target design specification, data mapping, ADRs
-  → Gate: design reviewed and approved by Tech Lead before Stage 3
+Stage 1: Legacy Understanding  (/analyze-legacy, /extract-rules)
+  → Read and analyze source code. Extract BR-NNN rules. Produce open questions.
+  → GATE: All open questions resolved. BA/domain expert validates rules register.
 
-STAGE 3: Code Generation
-  → Generate target-state code from Stage 2 specifications
-  → Generate unit tests alongside code
-  → Produce: Java classes, tests, updated traceability
-  → Gate: generated code passes all tests, passes /review-code check
+Stage 2: Target Mapping  (/create-adr, /map-data, /generate-openapi-spec)
+  → Map legacy components to ATOM services. Define API contracts (spec-first). Write ADRs.
+  → GATE: API spec published. Design reviewed and approved by Tech Lead.
 
-STAGE 4: Review and Hardening
-  → Human code review against Stage 2 spec
-  → Security review
-  → Integration testing
-  → Produce: reviewed, tested, documented production-ready code
-  → Gate: all review-gate items from guardrails/review-gates.md satisfied
+Stage 3: Code Generation  (/generate-service)
+  → Generate ATOM code from Stage 2 specifications. Generate tests alongside.
+  → GATE: All tests pass. /review-code check passes.
+
+Stage 4: Review and Hardening  (/review-code, /package-delivery)
+  → Human code review against Stage 2 spec. Security review. Integration testing.
+  → GATE: All review-gate items in governance/review-gates.md satisfied.
+  → DELIVERY: /package-delivery packages artifacts + traceability matrix for sign-off.
 ```
 
-**Non-negotiable workflow rules**:
-- Never generate production code (Stage 3) without completing Stages 1 and 2 for the same module
-- Stage 2 output (target design) must be approved before Stage 3 begins
-- Stage 4 (human review) cannot be skipped, even for small changes
+**Non-negotiable:** Never generate production code (Stage 3) without completing Stages 1 and 2.
 
 ---
 
 ## Files to Never Modify
 
-[USER FILLS — List directories and files that Claude must never modify under any circumstances. Examples:]
-
-- `legacy-artifacts/` — All legacy source code is read-only. It is the source of truth for business behavior. Claude may read these files but must never write to them.
-- `traceability/assumption-register.md` — Claude may suggest additions but must not autonomously modify this file. All changes require human approval.
-- `docs/architecture/adr-*.md` — Approved ADRs are immutable. New decisions require new ADRs; existing ADRs are never edited after approval.
-- `.github/workflows/*.yml` — CI/CD pipeline definitions require DevSecOps approval. Claude must not modify pipeline files.
-- `infra/terraform/` — Infrastructure changes require explicit approval and go through a separate review process.
+- `legacy-artifacts/` — All legacy source code is read-only. Source of truth for business behavior.
+- `traceability/assumption-register.md` — Claude may suggest additions but must not autonomously modify.
+- `docs/architecture/adr-*.md` — Approved ADRs are immutable. New decisions = new ADRs.
+- `.github/workflows/*.yml` — CI/CD pipelines require DevSecOps approval.
+- `infra/terraform/` — Infrastructure changes require explicit approval.
 
 ---
 
 ## Domain Vocabulary
 
-[USER FILLS — Define the project-specific terms that must be used consistently. Claude will use these terms precisely. Mixing up domain terms (e.g., "account" vs "card" vs "token") causes errors. Example:]
+[USER FILLS: Define project-specific terms. AI will use these precisely. Example:]
 
 | Term | Definition | Do NOT use |
 |---|---|---|
-| Authorization | A real-time decision to approve or decline a payment transaction | "approval", "auth request" |
-| Clearing | The process of reconciling settled transactions between acquirer and issuer | "settlement" (that is different) |
-| PAN | Primary Account Number — the 16-digit card number | "card number", "credit card number" |
-| Cardholder | The customer who owns the payment card | "user", "customer", "member" |
-| Limit | A configurable spending or velocity threshold | "cap", "maximum", "threshold" |
+| Authorization | A real-time approve/decline decision on a payment transaction | "approval", "auth" |
+| PAN | Primary Account Number — the 16-digit card number | "card number" |
+| Clearing | Post-authorization reconciliation | "settlement" (different process) |
+| Cardholder | The customer who owns the payment card | "user", "customer" |
+| Limit | A configurable spending or velocity threshold | "cap", "maximum" |
 
 ---
 
 ## Known Context
 
-[USER FILLS — List key decisions already made, constraints that are non-negotiable, and things that have already been tried and rejected. This prevents Claude from suggesting things that have already been decided. Examples:]
+[USER FILLS — list decisions already made, non-negotiables, and rejected options]
 
 ### Decisions Already Made
-- [USER FILLS — e.g., "Target language is Java 17. Python was evaluated and rejected in ADR-003."]
-- [USER FILLS — e.g., "The database is PostgreSQL on AWS RDS. Oracle was evaluated and rejected for licensing cost reasons (ADR-007)."]
-- [USER FILLS — e.g., "Kafka is the messaging backbone. Do not suggest RabbitMQ or SQS as alternatives."]
+- [USER FILLS: e.g., "Target is Java 17. Python evaluated and rejected in ADR-003."]
+- [USER FILLS: e.g., "Database is PostgreSQL on RDS. Oracle rejected for cost (ADR-007)."]
+- [USER FILLS: e.g., "Kafka for async messaging. Do not suggest RabbitMQ."]
 
 ### Non-Negotiable Constraints
-- [USER FILLS — e.g., "Authorization response time SLA: P99 < 150ms. All generated code must be benchmarked against this."]
-- [USER FILLS — e.g., "PCI DSS Level 1 compliance is required. No cardholder data may leave the PCI-scoped network segment."]
-- [USER FILLS — e.g., "The legacy COBOL system will remain in production until full parallel run validation is complete. Modern code must produce bit-for-bit identical decisions for the same input."]
+- [USER FILLS: e.g., "Authorization P99 SLA: < 150ms. Generated code must account for this."]
+- [USER FILLS: e.g., "PCI DSS Level 1 required. No cardholder data leaves PCI-scoped network."]
 
 ### Tried and Rejected
-- [USER FILLS — e.g., "Event sourcing was evaluated for the authorization service and rejected — too complex for the team's current expertise (ADR-012). Do not suggest event sourcing."]
-- [USER FILLS — e.g., "GraphQL was evaluated for the external API and rejected due to partner integration complexity (ADR-015). All external APIs will be REST."]
+- [USER FILLS: e.g., "Event sourcing evaluated and rejected — ADR-012. Do not suggest."]
 
 ---
 
 ## Session Log
 
-Use this section to maintain a brief running log of what has been completed across Claude Code sessions. Update it as work progresses to maintain continuity.
-
-| Date | Session | What was completed | Artifacts produced |
+| Date | Task | Completed | Artifacts |
 |---|---|---|---|
-| [DATE] | [Brief description] | [What was analyzed/generated/reviewed] | [Files created/updated] |
+| [DATE] | [Brief] | [What was done] | [Files created/updated] |

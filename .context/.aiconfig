@@ -1,0 +1,43 @@
+{
+  "forge": {
+    "version": "2.0",
+    "description": "FORGE AI Context Engine — auto-load configuration",
+    "context_files": {
+      "always_load": [
+        ".context/CORE_SKILLS.md"
+      ],
+      "load_when_atom_project": [
+        ".context/ATOM_CHASSIS.md"
+      ],
+      "load_when_modernization": [
+        ".context/MODERNIZATION.md",
+        ".context/ATOM_CHASSIS.md",
+        ".context/COBOL_READING_GUIDE.md"
+      ],
+      "load_when_payments_project": [
+        ".context/PAYMENTS_DOMAIN.md"
+      ]
+    },
+    "tool_config_files": {
+      "claude_code": "CLAUDE.md",
+      "github_copilot": ".github/copilot-instructions.md",
+      "cursor": ".cursorrules",
+      "jetbrains_ai": ".idea/ai-instructions.md"
+    },
+    "notes": {
+      "claude_code": "Claude Code reads CLAUDE.md automatically. Reference .context/ files from CLAUDE.md using 'See .context/ATOM_CHASSIS.md for ATOM patterns'.",
+      "github_copilot": "In VS Code Copilot Chat, reference with #file:.context/CORE_SKILLS.md. In JetBrains, paste into context pane.",
+      "cursor": "Add @.context/CORE_SKILLS.md in Composer. Include in .cursorrules for automatic loading.",
+      "watsonx": "Paste content of relevant .context/ files into the Custom Instructions field in the VS Code extension settings.",
+      "aws_q": "Paste content as the opening system message in Q Developer chat."
+    },
+    "how_to_use": {
+      "step_1": "Copy the entire .context/ folder into the root of your project repository",
+      "step_2": "Configure your AI tool using the appropriate file from tool-setup/ in FORGE",
+      "step_3": "At the start of each AI session, load CORE_SKILLS.md (and ATOM_CHASSIS.md if building ATOM services)",
+      "step_4": "For modernization projects, also load MODERNIZATION.md and COBOL_READING_GUIDE.md",
+      "step_4b": "For payments/card projects, also load PAYMENTS_DOMAIN.md",
+      "step_5": "Reference the FORGE SDLC stage prompts from sdlc/ for your current phase"
+    }
+  }
+}

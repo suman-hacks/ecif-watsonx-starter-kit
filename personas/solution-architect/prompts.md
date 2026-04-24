@@ -21,7 +21,7 @@ INPUTS
 Legacy analysis summary: [PASTE MODE 1 / STAGE 01 OUTPUT SUMMARY]
 Business rules register: [PASTE OR REFERENCE RULES FILE]
 NFRs: [PASTE NFR REGISTER]
-Target stack: [e.g., Java 21 / Spring Boot 3.3 / Kafka / PostgreSQL / Kubernetes]
+Target stack: [e.g., Java 17 LTS / Spring Boot 3.x (ATOM chassis) / Kafka / PostgreSQL / Kubernetes]
 Organizational constraints: [any mandatory patterns, shared services, compliance isolation requirements]
 
 TASK — produce ALL of the following:
@@ -160,7 +160,7 @@ DESIGN UNDER REVIEW
 
 REVIEW AGAINST
 NFRs: [PASTE KEY NFRS]
-Architecture standards: [PASTE FROM constitution/03-architecture-standards.md]
+Architecture standards: [PASTE FROM .context/ATOM_CHASSIS.md — ATOM architecture layers, dependency direction, required annotations]
 Business rules: [PASTE RELEVANT RULES]
 
 REVIEW DIMENSIONS

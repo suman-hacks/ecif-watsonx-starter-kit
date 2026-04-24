@@ -15,9 +15,9 @@ Solution Architects use FORGE to design target-state architectures grounded in d
 
 ## How to Use FORGE
 
-1. Load `constitution/01-core-principles.md` + `constitution/03-architecture-standards.md` into your AI session
-2. Load the relevant knowledge packs: `knowledge-packs/microservices/`, `knowledge-packs/event-driven/`, `knowledge-packs/api-design/`
-3. For mainframe projects, also load `project-contexts/mainframe-modernization/cobol-to-java.md`
+1. Load `constitution/01-core-principles.md` + `.context/ATOM_CHASSIS.md` into your AI session
+2. For mainframe projects, also load `.context/MODERNIZATION.md` and `.context/COBOL_READING_GUIDE.md`
+3. For payments projects, also load `.context/PAYMENTS_DOMAIN.md`
 4. Use prompts from `sdlc/03-architecture/` for stage-specific work
 5. Use prompts in `prompts.md` here for cross-cutting architect tasks
 

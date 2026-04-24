@@ -30,18 +30,36 @@ Before generating any code, confirm:
 2. API contract is defined — [YES: attached below / NO: STOP and request it]  
 3. Business rules are documented — [YES: attached below / NO: STOP and request it]
 
-CONTEXT
+CONTEXT FILES ACTIVE
+- [ ] .context/ATOM_CHASSIS.md — loaded (ATOM annotations and patterns)
+- [ ] .context/CORE_SKILLS.md — loaded (security and quality guardrails)
+
+SERVICE CONTEXT
 Service name: [NAME]
-Language/Framework: [e.g., Java 21 / Spring Boot 3.3 / Gradle]
-Architecture pattern: [e.g., Hexagonal / Clean / Layered]
-Package structure:
-  [com.company.domain.service]/
-    api/          - REST controllers (thin, no business logic)
-    application/  - Application services (orchestration)
-    domain/       - Business entities, value objects, policies
-    adapters/     - Infrastructure: DB, messaging, external services
-    config/       - Spring configuration
-    observability/ - Metrics, health checks
+Language/Framework: Java 17 / Spring Boot 3.x / ATOM chassis
+Package root: com.[org].[domain].[service-name]
+
+ATOM PACKAGE STRUCTURE (use exactly — do not invent new layers)
+com.[org].[domain].[service-name]/
+  api/
+    controller/       ← @RestController — returns ResponseEntity<ApiResponse<T>>
+    dto/              ← Immutable @Value DTOs with Bean Validation
+    mapper/           ← MapStruct mapper interfaces
+  application/
+    service/          ← @AtomService — orchestrates domain, no persistence logic
+  domain/
+    model/            ← Entities, value objects, enums, Java records
+    port/inbound/     ← Use case interfaces
+    port/outbound/    ← Repository and external client interfaces
+    exception/        ← Domain exceptions (extend RuntimeException)
+  infrastructure/
+    persistence/      ← @AtomRepository — JPA implementations of outbound ports
+    client/           ← External HTTP clients with @CircuitBreaker
+    messaging/        ← Kafka listeners and producers
+    config/           ← @Configuration classes
+
+DEPENDENCY DIRECTION: infrastructure → application → domain
+Domain layer must have ZERO Spring, JPA, or Kafka imports.
 
 APPROVED DESIGN
 [PASTE SERVICE DESIGN DOCUMENT FROM STAGE 04]
@@ -64,15 +82,21 @@ Generate the complete implementation for [COMPONENT NAME]. Include:
 3. **Integration test stub** — skeleton integration test with TODOs for dependencies
 4. **Assumptions list** — explicit list of every assumption made where the spec was silent
 
-CODING STANDARDS (apply to all generated code)
-- No business logic in @RestController — controllers delegate immediately to application service
-- Constructor injection only — no @Autowired field injection
-- All exceptions must be caught and converted to domain exceptions — no raw framework exceptions to callers
-- Structured logging: every significant operation logs: correlationId (from MDC), entityId, operation, outcome
-- BigDecimal for all monetary amounts — never double/float
-- Immutable value objects where possible (Java records)
-- Test naming: `given_[condition]_when_[action]_then_[outcome]`
+ATOM CODING STANDARDS (non-negotiable — apply to all generated code)
+- @AtomService on all application service classes (never plain @Service)
+- @AtomRepository on all repository implementation classes (never plain @Repository)
+- @AtomValidated on controller @RequestBody params (never plain @Valid)
+- @CircuitBreaker(name="[service]", fallbackMethod="[name]Fallback") on ALL downstream HTTP calls
+- @Slf4j + @RequiredArgsConstructor on all classes (Lombok — never @Autowired field injection)
+- All controllers return ResponseEntity<ApiResponse<T>> — never raw DTOs
+- Domain layer: zero Spring/JPA/Kafka imports — pure Java only
+- Structured logging only: log.info("event", "key", value, "key2", value2) — never string concat
+- Never log: PAN, CVV, passwords, tokens, full account numbers
+- BigDecimal for all monetary amounts — never double or float
+- Immutable value objects using Java records or @Value (Lombok)
+- Test naming: `methodName_scenario_expectedBehavior`
 - No magic numbers — extract to named constants with business meaning
+- [BEHAVIORAL CHANGE: CBD-NNN] comment on any line that intentionally differs from legacy behavior
 
 SECURITY RULES (apply to all generated code)
 - Validate all inputs at the API boundary (@Valid, custom validators)

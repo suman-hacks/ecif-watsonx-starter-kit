@@ -1,8 +1,0 @@
-{
-  "moduleId": "ICSAUTHZ",
-  "boundedContext": "authorization",
-  "services": [],
-  "events": [],
-  "apis": [],
-  "assumptions": []
-}

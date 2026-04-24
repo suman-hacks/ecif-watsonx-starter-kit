@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FORGE — AI Prompt Portal</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3347;
+      --accent: #6366f1;
+      --accent-light: #818cf8;
+      --text: #e2e4f0;
+      --text-muted: #8b90a8;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --font: 'Inter', system-ui, -apple-system, sans-serif;
+      --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+
+    /* Header */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+    .logo span { color: var(--accent-light); }
+    .tagline { color: var(--text-muted); font-size: 13px; margin-left: auto; }
+
+    /* Layout */
+    .layout { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 61px); }
+
+    /* Sidebar */
+    aside {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 20px 0;
+      overflow-y: auto;
+    }
+    .sidebar-section { margin-bottom: 8px; }
+    .sidebar-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 8px 20px 4px;
+    }
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 20px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      font-size: 14px;
+      color: var(--text-muted);
+      transition: all 0.15s;
+    }
+    .sidebar-item:hover { background: var(--surface2); color: var(--text); }
+    .sidebar-item.active { border-left-color: var(--accent); background: var(--surface2); color: var(--text); }
+    .sidebar-icon { font-size: 16px; width: 20px; text-align: center; }
+
+    /* Main content */
+    main { padding: 32px; overflow-y: auto; }
+    .content-header { margin-bottom: 24px; }
+    .content-header h1 { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+    .content-header p { color: var(--text-muted); font-size: 14px; max-width: 600px; line-height: 1.6; }
+
+    /* Stage tabs */
+    .stage-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+    .stage-tab {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-muted);
+      transition: all 0.15s;
+    }
+    .stage-tab:hover { border-color: var(--accent); color: var(--accent-light); }
+    .stage-tab.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+    /* Prompt cards */
+    .prompt-grid { display: grid; gap: 16px; }
+    .prompt-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+    .prompt-card:hover { border-color: var(--accent); }
+    .prompt-card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .prompt-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    .badge-discovery { background: #1e3a5f; color: #60a5fa; }
+    .badge-requirements { background: #1e4a2e; color: #4ade80; }
+    .badge-architecture { background: #3d2e00; color: #fbbf24; }
+    .badge-development { background: #2d1b4e; color: #c084fc; }
+    .badge-testing { background: #1e3d3d; color: #34d399; }
+    .badge-security { background: #4a1e1e; color: #f87171; }
+    .badge-operations { background: #1e2d4a; color: #67e8f9; }
+    .badge-preengagement { background: #3d2000; color: #fb923c; }
+    .prompt-title { font-size: 15px; font-weight: 600; flex: 1; }
+    .prompt-expand { color: var(--text-muted); font-size: 12px; transition: transform 0.2s; }
+    .prompt-card.open .prompt-expand { transform: rotate(180deg); }
+    .prompt-desc { font-size: 13px; color: var(--text-muted); padding: 0 20px 16px; line-height: 1.6; }
+    .prompt-body { display: none; padding: 0 20px 20px; }
+    .prompt-card.open .prompt-body { display: block; }
+    .prompt-text {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: #c9d1f0;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .copy-btn {
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .copy-btn:hover { background: var(--accent-light); }
+    .copy-btn.copied { background: var(--success); }
+
+    /* Tool selector */
+    .tool-selector { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .tool-btn {
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tool-btn:hover, .tool-btn.active { border-color: var(--accent); color: var(--accent-light); background: rgba(99,102,241,0.1); }
+
+    /* Info box */
+    .info-box {
+      background: rgba(99,102,241,0.08);
+      border: 1px solid rgba(99,102,241,0.3);
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+      color: var(--text);
+    }
+    .info-box strong { color: var(--accent-light); }
+
+    /* Home screen */
+    .home-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+    .home-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .home-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .home-card-icon { font-size: 28px; margin-bottom: 12px; }
+    .home-card-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+    .home-card-desc { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .layout { grid-template-columns: 1fr; }
+      aside { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">FORGE<span>.</span></div>
+  <div class="tagline">AI Prompt Framework — ATOM + FORGE | Enterprise Engineering</div>
+</header>
+
+<div class="layout">
+  <aside>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Navigate</div>
+      <div class="sidebar-item active" onclick="showSection('home')">
+        <span class="sidebar-icon">🏠</span> Home
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">By Persona</div>
+      <div class="sidebar-item" onclick="showSection('developer')"><span class="sidebar-icon">💻</span> Developer</div>
+      <div class="sidebar-item" onclick="showSection('architect')"><span class="sidebar-icon">🏗️</span> Solution Architect</div>
+      <div class="sidebar-item" onclick="showSection('qa')"><span class="sidebar-icon">🧪</span> QA Engineer</div>
+      <div class="sidebar-item" onclick="showSection('devsecops')"><span class="sidebar-icon">🔐</span> DevSecOps</div>
+      <div class="sidebar-item" onclick="showSection('pm')"><span class="sidebar-icon">📋</span> Product Manager</div>
+      <div class="sidebar-item" onclick="showSection('ba')"><span class="sidebar-icon">📊</span> Business Analyst</div>
+      <div class="sidebar-item" onclick="showSection('lead')"><span class="sidebar-icon">🎯</span> Lead Engineer</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">By Stage</div>
+      <div class="sidebar-item" onclick="showSection('preengagement')"><span class="sidebar-icon">🔍</span> Pre-Engagement</div>
+      <div class="sidebar-item" onclick="showSection('discovery')"><span class="sidebar-icon">🗺️</span> Discovery</div>
+      <div class="sidebar-item" onclick="showSection('requirements')"><span class="sidebar-icon">📝</span> Requirements</div>
+      <div class="sidebar-item" onclick="showSection('architecture')"><span class="sidebar-icon">🏛️</span> Architecture</div>
+      <div class="sidebar-item" onclick="showSection('development')"><span class="sidebar-icon">⚙️</span> Development</div>
+      <div class="sidebar-item" onclick="showSection('testing')"><span class="sidebar-icon">✅</span> Testing</div>
+      <div class="sidebar-item" onclick="showSection('security')"><span class="sidebar-icon">🛡️</span> Security</div>
+      <div class="sidebar-item" onclick="showSection('operations')"><span class="sidebar-icon">📡</span> Operations</div>
+    </div>
+  </aside>
+
+  <main id="main-content">
+    <!-- HOME -->
+    <div id="section-home">
+      <div class="content-header">
+        <h1>FORGE — AI Prompt Framework</h1>
+        <p>Select a persona or SDLC stage to access structured AI prompts. Each prompt is production-ready — copy and paste directly into your AI tool.</p>
+      </div>
+      <div class="info-box">
+        <strong>How to use:</strong> (1) Select your role or current SDLC stage. (2) Choose a prompt. (3) Click <strong>Copy Prompt</strong>. (4) Paste into your AI tool (Claude, Copilot, Cursor, watsonx). (5) Fill in the <code>[BRACKETED]</code> sections with your project details.
+      </div>
+      <div class="home-grid">
+        <div class="home-card" onclick="showSection('preengagement')">
+          <div class="home-card-icon">🔍</div>
+          <div class="home-card-title">Pre-Engagement Analysis</div>
+          <div class="home-card-desc">5-task AI-accelerated discovery for legacy system modernization workshops.</div>
+        </div>
+        <div class="home-card" onclick="showSection('developer')">
+          <div class="home-card-icon">💻</div>
+          <div class="home-card-title">Developer Prompts</div>
+          <div class="home-card-desc">ATOM service generation, COBOL analysis, code review, test generation.</div>
+        </div>
+        <div class="home-card" onclick="showSection('architect')">
+          <div class="home-card-icon">🏗️</div>
+          <div class="home-card-title">Architect Prompts</div>
+          <div class="home-card-desc">Architecture decision records, service decomposition, API contract design.</div>
+        </div>
+        <div class="home-card" onclick="showSection('ba')">
+          <div class="home-card-icon">📊</div>
+          <div class="home-card-title">Business Analyst Prompts</div>
+          <div class="home-card-desc">Business rule extraction, user story generation, requirements traceability.</div>
+        </div>
+        <div class="home-card" onclick="showSection('qa')">
+          <div class="home-card-icon">🧪</div>
+          <div class="home-card-title">QA Engineer Prompts</div>
+          <div class="home-card-desc">Test strategy, test case generation, coverage analysis, UAT scenarios.</div>
+        </div>
+        <div class="home-card" onclick="showSection('devsecops')">
+          <div class="home-card-icon">🔐</div>
+          <div class="home-card-title">DevSecOps Prompts</div>
+          <div class="home-card-desc">Threat modeling, security review, IaC scanning, CI/CD pipeline generation.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRE-ENGAGEMENT -->
+    <div id="section-preengagement" style="display:none">
+      <div class="content-header">
+        <h1>Pre-Engagement Analysis</h1>
+        <p>5-task AI-accelerated discovery workflow. Run these tasks before a modernization workshop to build shared understanding from code evidence — not whiteboard guesses.</p>
+      </div>
+      <div class="info-box">
+        <strong>How it works:</strong> Open your AI tool in the root of the target repository. Copy each prompt, paste it, and let the AI analyze the codebase. Each task takes 2–10 minutes. Review and annotate the output before sharing. Run Task 5 last — it requires outputs from Tasks 1–4.
+      </div>
+      <div class="prompt-grid" id="prompts-preengagement"></div>
+    </div>
+
+    <!-- DEVELOPER -->
+    <div id="section-developer" style="display:none">
+      <div class="content-header">
+        <h1>Developer Prompts</h1>
+        <p>Prompts for code generation, legacy analysis, code review, and test creation using ATOM patterns and FORGE guardrails.</p>
+      </div>
+      <div class="stage-tabs" id="dev-stage-tabs"></div>
+      <div class="prompt-grid" id="prompts-developer"></div>
+    </div>
+
+    <!-- ARCHITECT -->
+    <div id="section-architect" style="display:none">
+      <div class="content-header">
+        <h1>Solution Architect Prompts</h1>
+        <p>Prompts for architecture decisions, service decomposition, API design, and migration strategy.</p>
+      </div>
+      <div class="prompt-grid" id="prompts-architect"></div>
+    </div>
+
+    <!-- QA -->
+    <div id="section-qa" style="display:none">
+      <div class="content-header">
+        <h1>QA Engineer Prompts</h1>
+        <p>Prompts for test strategy, test case generation, UAT scenarios, and coverage analysis.</p>
+      </div>
+      <div class="prompt-grid" id="prompts-qa"></div>
+    </div>
+
+    <!-- DEVSECOPS -->
+    <div id="section-devsecops" style="display:none">
+      <div class="content-header">
+        <h1>DevSecOps Prompts</h1>
+        <p>Prompts for threat modeling, security code review, compliance checks, and CI/CD pipeline generation.</p>
+      </div>
+      <div class="prompt-grid" id="prompts-devsecops"></div>
+    </div>
+
+    <!-- PM -->
+    <div id="section-pm" style="display:none">
+      <div class="content-header">
+        <h1>Product Manager Prompts</h1>
+        <p>Prompts for feature definition, roadmap alignment, stakeholder communication, and acceptance criteria.</p>
+      </div>
+      <div class="prompt-grid" id="prompts-pm"></div>
+    </div>
+
+    <!-- BA -->
+    <div id="section-ba" style="display:none">
+      <div class="content-header">
+        <h1>Business Analyst Prompts</h1>
+        <p>Prompts for business rule extraction, user story generation, process mapping, and requirements traceability.</p>
+      </div>
+      <div class="prompt-grid" id="prompts-ba"></div>
+    </div>
+
+    <!-- LEAD -->
+    <div id="section-lead" style="display:none">
+      <div class="content-header">
+        <h1>Lead Engineer Prompts</h1>
+        <p>Prompts for review gates, team workflow setup, architectural governance, and ADR management.</p>
+      </div>
+      <div class="prompt-grid" id="prompts-lead"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────────
+
+const PROMPTS = {
+  preengagement: [
+    {
+      id: 'T1',
+      badge: 'preengagement',
+      badgeLabel: 'T1 / 5',
+      title: 'System Architecture Analysis',
+      desc: 'Analyzes the codebase and produces a factual, evidence-based map of the system architecture, tech stack, and end-to-end data flow. Output: TX_ARCH.md',
+      prompt: `You are a senior software architect performing a pre-engagement codebase analysis.
+Analyze this entire codebase thoroughly and produce a structured architecture document.
+Your analysis must be grounded in actual code evidence — cite specific file names, class names,
+configuration files, and package structures to support every claim. Do not invent components;
+if something is unclear, mark it as [UNKNOWN — needs investigation].
+
+Project context: [INSERT 1–2 SENTENCES: what this system does]
+Primary entry points to examine: [INSERT: e.g. src/main/java/..., config/application.yml, pom.xml]
+
+Produce a document titled "System Architecture Analysis" with these sections:
+
+## 1. Tech Stack
+Table with columns: Component | Technology | Version | Role in System
+Cover: language/runtime, framework, databases, message broker, rules engine,
+external API clients, build tools, containerization, CI/CD, observability, auth.
+Extract versions from lock files / pom.xml / build.gradle — do not guess.
+
+## 2. Transaction / Request Flow
+Table: Step # | Component | What Happens | Latency-Sensitive?
+Trace from entry point through auth, validation, enrichment, processing, decision, to response.
+
+## 3. Decision Logic Locations
+Every location where a consequential business decision is made.
+Table: Decision Type | Location (file/class/method) | Logic Type | Input Data | External Dependencies
+Logic types: HARDCODED_RULE | CONFIGURABLE_RULE | RULES_ENGINE | ML_MODEL | EXTERNAL_SERVICE | DB_LOOKUP
+
+## 4. Service / Module Map
+Table: Service/Module | Responsibility | Language | LOC (approx) | Deployment Unit | Key Dependencies
+
+## 5. Infrastructure Indicators
+Processing model (OLTP/batch/mixed), deployment environment, mainframe indicators,
+scalability model, notable constraints.
+
+## 6. ASCII Architecture Diagram
+End-to-end ASCII flow diagram in a code block. Label all connections with protocol/format.
+Mark unknowns as [BLACK BOX] or [MAINFRAME GAP].
+
+## 7. Unknowns and Black Boxes
+Table: Component/Area | What Is Unknown | Why It Matters | Investigation Path
+
+Rules: Cite evidence for every claim. Mark invented content [ASSUMED — verify].
+Mark gaps [UNKNOWN — needs investigation]. No recommendations — analysis only.`
+    },
+    {
+      id: 'T2',
+      badge: 'preengagement',
+      badgeLabel: 'T2 / 5',
+      title: 'Decision Logic Inventory',
+      desc: 'Finds and inventories every piece of decision logic — rules, conditions, thresholds, and their locations. Output: TX_DECISION_INVENTORY.md',
+      prompt: `I need you to find and inventory every piece of decision logic in this codebase.
+Produce a file called TX_DECISION_INVENTORY.md with the following sections:
+
+## 1. Decision Categories
+Group every authorization rule or check into categories such as:
+- Balance / available funds checks
+- Transaction amount limits (per-transaction, daily, velocity)
+- Merchant category restrictions (MCC-based rules)
+- Card status checks (active, blocked, expired, lost/stolen)
+- Geographic / country restrictions
+- Fraud score thresholds
+- Stand-in processing rules
+- Network-specific rules (Visa, Mastercard, etc.)
+- Product / account type-specific rules
+- Regulatory / compliance holds
+
+For each category: count of rules, where they live (code/config/database/external service),
+and how they are structured.
+
+## 2. Rules Engine Analysis (if applicable)
+Platform/technology, number of rules/policies, how organized,
+how deployed/updated, versioning/audit trail.
+
+## 3. Hardcoded vs. Configurable
+Percentage of decision logic in application code vs. externalized.
+Specific examples of each. Flag duplicated logic.
+
+## 4. Response Code Mapping
+How does the system map internal decisions to network response codes (ISO 8583)?
+Where is this mapping defined?
+
+## 5. Top 10 Most Complex Decision Paths
+For each: what triggers it, what data it needs, how many systems involved,
+how many steps. Explain what makes it complex.
+
+Be thorough. If a rule set has thousands of rules, characterize the structure
+with representative examples rather than listing every rule.`
+    },
+    {
+      id: 'T3',
+      badge: 'preengagement',
+      badgeLabel: 'T3 / 5',
+      title: 'Integration & Latency Map',
+      desc: 'Documents every inbound and outbound integration, data source, message format, and latency budget. Output: TX_INTEGRATIONS.md',
+      prompt: `Analyze this codebase and produce TX_INTEGRATIONS.md with:
+
+## 1. Inbound Interfaces
+Every entry point where requests arrive.
+Table: Interface | Protocol/Format | Source System | Volume Indicator | Notes
+Include: card network gateways (Visa, Mastercard), digital channels, ATM, ACH/wire.
+
+## 2. Data Lookups During Authorization
+Every data source consulted during processing.
+Table: Data Source | Type (DB/cache/service/file) | What Data | Lookup Pattern | Estimated Latency Impact
+This is critical — in real-time authorization, every millisecond matters.
+Include: account balances, card status, customer profile, fraud scores, limits.
+
+## 3. Outbound Calls
+Every external system called during or after processing.
+Table: Target | Protocol | Purpose | Synchronous or Async? | On Critical Path?
+Include: fraud engines, core banking, ledger, loyalty, notifications, audit, settlement.
+
+## 4. Message Formats
+What message standards are in use? (ISO 8583, ISO 20022, proprietary XML/JSON, fixed-width)
+Where are message parsing and formatting definitions located?
+
+## 5. Latency Budget
+Based on timeouts, circuit breakers, performance tests in the code:
+What is the expected end-to-end latency target for authorization decisions?
+Break down latency allocation by component / integration.
+
+## 6. Stand-In & Fallback Behavior
+What happens when a dependency is unavailable?
+Is there stand-in processing logic? What are the fallback rules and where are they defined?
+
+Focus on what you can verify from the code. Flag anything suspected but not confirmable.`
+    },
+    {
+      id: 'T4',
+      badge: 'preengagement',
+      badgeLabel: 'T4 / 5',
+      title: 'Complexity & Risk Map',
+      desc: 'Identifies complexity hotspots, test coverage gaps, regression risks, and documentation debt. Output: TX_RISK_MAP.md',
+      prompt: `Analyze this codebase for complexity and risk. Produce TX_RISK_MAP.md with:
+
+## 1. Code Complexity Hotspots
+The 10 files or modules with the highest cyclomatic complexity or most convoluted logic.
+Table: File | LOC | Why It Is Complex | Role in Authorization Flow
+
+## 2. Test Coverage
+- Unit tests, integration tests, end-to-end tests, performance tests?
+- Rough ratio of test code to application code
+- Are the core authorization decision paths covered?
+- Are there test transaction scenarios or test card numbers/profiles defined?
+- Examples of well-tested vs. untested authorization paths
+
+## 3. Regression Risk
+Which parts would be highest risk to change? Consider:
+- Shared libraries or utilities used across multiple decision paths
+- Tightly coupled components
+- Areas with no test coverage
+- Components with complex threading, concurrency, or state management
+
+## 4. Change Velocity
+Based on git history (if available):
+- Which authorization code changes most frequently?
+- Which parts have not been touched in over a year?
+- Any recent large refactors or migrations in progress?
+
+## 5. Documentation Gaps
+- What documentation exists (READMEs, wikis, runbooks, API specs, architecture docs)?
+- What is notably absent?
+
+Keep this concise. Flag the things that would surprise someone
+approaching this codebase for the first time.`
+    },
+    {
+      id: 'T5',
+      badge: 'preengagement',
+      badgeLabel: 'T5 / 5',
+      title: 'POC Option Analysis',
+      desc: 'Generates 3–5 grounded POC scenarios based on findings from Tasks 1–4. Run this LAST. Output: TX_POC_OPTIONS.md',
+      prompt: `PREREQUISITE: This task requires TX_ARCH.md, TX_DECISION_INVENTORY.md,
+TX_INTEGRATIONS.md, and TX_RISK_MAP.md from Tasks 1–4. Read all of them before proceeding.
+
+Based on this analysis, produce TX_POC_OPTIONS.md proposing 3–5 candidate POC scenarios
+for modernizing this system. For each option:
+
+1. Option Name & Summary — one sentence
+2. Problem It Addresses — cite specific findings from the analysis files
+3. What the POC Would Demonstrate — concretely, what gets built; what does "done" look like?
+4. Scope Boundary — what is in/out of scope; which components are touched
+5. Data & System Requirements — what data, systems, environments needed; flag hard-to-get items
+6. Risk Assessment — does this touch high-risk areas from T4? Well-tested or not?
+7. Evaluation Criteria — 2–3 specific, measurable success criteria for the POC
+8. Estimated Effort — 2-week / 4-week / 8-week? What team composition?
+
+After all options, add a Comparison Matrix:
+| Dimension | Option A | Option B | Option C |
+| Business impact | H/M/L | | |
+| Technical feasibility | H/M/L | | |
+| Scope isolation (safe from production?) | H/M/L | | |
+| Data availability | H/M/L | | |
+| Risk level | H/M/L | | |
+| Time to first measurable result | Weeks | | |
+
+End with a Recommendation section: which option to start with and why. Be opinionated.
+
+Rules:
+- Every option must be grounded in specific analysis findings — no generic AI use cases
+- Be realistic about POC vs. full implementation scope
+- Factor uncertainty and gaps from T1–T4 into risk assessment`
+    }
+  ],
+
+  developer: [
+    {
+      id: 'DEV-01',
+      stage: 'Discovery',
+      badge: 'discovery',
+      badgeLabel: 'Discovery',
+      title: 'Analyze Legacy COBOL Program',
+      desc: 'Deeply analyze a COBOL program and produce a structured understanding document with business rules, data structures, and dependencies.',
+      prompt: `You are a senior engineer specializing in legacy modernization.
+Apply the rules from .context/CORE_SKILLS.md and .context/MODERNIZATION.md.
+
+Analyze the following COBOL program and produce a structured understanding document.
+
+COBOL source: [PASTE SOURCE OR PROVIDE FILE PATH]
+
+Produce these sections:
+
+## 1. Program Purpose
+One paragraph: what business function does this program perform? Who calls it?
+
+## 2. Data Structures
+Map every major data item in WORKING-STORAGE to its Java equivalent:
+| COBOL Name | COBOL Type | Java Type | Notes |
+
+## 3. Business Rules
+Number each rule: BR-001, BR-002, etc.
+| Rule ID | Category | Rule Statement | Source Lines | Confidence | Open Questions |
+Categories: Validation | Calculation | Routing | Limit/Threshold | Status Check | Regulatory
+
+## 4. External Dependencies
+| Dependency | Type | How Called | Data Exchanged |
+Types: DB2 SQL | CICS call | MQ message | File I/O | Called program | External service
+
+## 5. Error Handling
+| Error Condition | Response Code | What Triggers It | Java Exception Equivalent |
+
+## 6. Traceability Map
+| Legacy Component | Candidate ATOM Service | Candidate Class | Notes |
+
+## 7. Open Questions
+List every ambiguity that must be resolved before modernization begins.
+Format: [OQ-NNN] Question | Why it matters | Who can answer
+
+Label every claim as FACT (from code) or ASSUMPTION (inferred).
+Include confidence: HIGH / MEDIUM / LOW.
+Do NOT generate Java code yet — analysis only.`
+    },
+    {
+      id: 'DEV-02',
+      stage: 'Development',
+      badge: 'development',
+      badgeLabel: 'Development',
+      title: 'Generate ATOM Service from Spec',
+      desc: 'Generate a complete, production-ready ATOM microservice from a design specification. Requires Stage 1 and 2 to be complete.',
+      prompt: `You are generating production-ready Java code for an ATOM microservice.
+Apply ALL rules from:
+- .context/CORE_SKILLS.md (security guardrails, code quality, testing standards)
+- .context/ATOM_CHASSIS.md (ATOM annotations, layers, response format)
+
+CONFIRM before generating: Stage 1 (legacy analysis) and Stage 2 (design) are complete.
+
+Service specification:
+- Service name: [e.g., PaymentAuthorizationService]
+- Business purpose: [describe what this service does]
+- API: [describe the REST endpoints]
+- Integrations: [list downstream services this calls]
+- Business rules to implement: [list BR-NNN rule IDs from business rules register]
+- Package: com.[org].[domain].[service-name]
+
+Generate:
+1. Controller class (uses @RestController, returns ResponseEntity<ApiResponse<T>>, @AtomValidated on request body)
+2. Application service class (uses @AtomService, @Slf4j, constructor injection)
+3. Domain model (immutable @Value classes for entities and value objects)
+4. Repository interface (domain port) + JPA implementation (@AtomRepository)
+5. Request/Response DTOs (immutable, with Bean Validation annotations)
+6. MapStruct mapper (DTO ↔ Domain)
+7. application.yml (all ATOM configuration sections)
+8. Unit test class for the application service (JUnit 5 + Mockito + AssertJ, AAA pattern)
+9. Integration test with Testcontainers
+
+For every deviation from legacy behavior, add:
+// [BEHAVIORAL CHANGE: CBD-NNN] Legacy did X, modern does Y — requires approval
+Produce a traceability table: Generated Class | Source Legacy Program | Source Business Rules`
+    },
+    {
+      id: 'DEV-03',
+      stage: 'Development',
+      badge: 'development',
+      badgeLabel: 'Development',
+      title: 'Review Code (FORGE + ATOM Standards)',
+      desc: 'Review code against FORGE constitution, ATOM patterns, and CORE_SKILLS guardrails. Returns Critical / Major / Minor findings.',
+      prompt: `You are conducting a FORGE-standard code review.
+Apply rules from: .context/CORE_SKILLS.md and .context/ATOM_CHASSIS.md
+
+Code to review: [PASTE CODE OR PROVIDE FILE PATHS]
+Business rules this implements: [PASTE RULES REGISTER OR BR-NNN IDs]
+
+Review for:
+
+SECURITY (from CORE_SKILLS.md)
+- SG-1: Hardcoded secrets/credentials?
+- SG-2: Input validation at all entry points?
+- SG-3: SQL injection risk?
+- SG-4: PII/PAN in logs?
+- SG-5: HTTP where HTTPS required?
+- SG-6: Over-privileged roles or permissions?
+
+ATOM CONFORMANCE (from ATOM_CHASSIS.md)
+- Uses @AtomService (not plain @Service)?
+- Uses @AtomRepository (not plain @Repository)?
+- Controller returns ResponseEntity<ApiResponse<T>>?
+- Uses @AtomValidated (not plain @Valid)?
+- All downstream calls have @CircuitBreaker + fallback?
+- Structured logging with key-value pairs (not string concat)?
+- No hardcoded URLs, ports, or hostnames?
+- Domain layer has zero framework imports?
+
+CODE QUALITY (from CORE_SKILLS.md)
+- Methods under 30 lines, single responsibility?
+- No magic numbers or strings?
+- Constructor injection throughout?
+- No silently swallowed exceptions?
+
+TESTING
+- Unit tests present for all business logic?
+- Tests cover happy path, error paths, boundary conditions?
+- Test naming: methodName_scenario_expectedBehavior?
+
+BEHAVIORAL CORRECTNESS
+- Any deviations from legacy behavior not marked [BEHAVIORAL CHANGE: CBD-NNN]?
+
+Output format:
+## CRITICAL (must fix before merge)
+## MAJOR (should fix before merge)
+## MINOR (fix when convenient)
+
+For each finding: file:line | issue | recommendation`
+    },
+    {
+      id: 'DEV-04',
+      stage: 'Testing',
+      badge: 'testing',
+      badgeLabel: 'Testing',
+      title: 'Generate Comprehensive Test Suite',
+      desc: 'Generate a full test suite for a service: unit tests, integration tests, and edge case coverage derived from business rules.',
+      prompt: `Generate a comprehensive test suite for the following code.
+Apply FORGE testing standards from .context/CORE_SKILLS.md (Section: Testing Standards).
+
+Code to test: [PASTE CODE OR FILE PATH]
+Business rules to verify: [PASTE BR-NNN rules or rules register]
+
+Generate:
+
+## Unit Tests (JUnit 5 + Mockito + AssertJ)
+For each public method:
+- Happy path test with realistic domain data
+- One test per documented business rule (name: methodName_ruleCondition_expectedResult)
+- Boundary condition tests (null, empty, max value, min value, zero)
+- Error/exception path tests
+- Concurrent access tests where state is involved
+
+Test structure — strictly AAA with comments:
+void methodName_scenario_expectedBehavior() {
+    // Arrange
+    // Act
+    // Assert
+}
+
+## Integration Tests (Testcontainers)
+- @SpringBootTest with real database via Testcontainers
+- At least one end-to-end happy path
+- At least one error path through the full stack
+- Kafka message consumption test if applicable
+
+## Test Data
+Use realistic domain data (not "test", 1, "foo").
+Example: valid 16-digit card number, ISO 4217 currency code, realistic transaction amount.
+
+## Coverage Analysis
+Which branches and paths are NOT covered by these tests? List them explicitly.
+What additional mocking or test infrastructure would be needed to cover them?`
+    }
+  ],
+
+  architect: [
+    {
+      id: 'ARCH-01',
+      badge: 'architecture',
+      badgeLabel: 'Architecture',
+      title: 'Service Decomposition from Legacy Monolith',
+      desc: 'Analyze a legacy system and propose a microservice decomposition strategy with ATOM service boundaries.',
+      prompt: `You are a solution architect designing the target-state microservices architecture.
+Apply rules from .context/CORE_SKILLS.md and .context/ATOM_CHASSIS.md.
+
+Legacy system to decompose: [describe or paste the system analysis from TX_ARCH.md]
+Business domain: [e.g., payment card authorization]
+Constraints: [e.g., P99 < 150ms, PCI DSS scope, ATOM chassis required]
+
+Produce:
+
+## 1. Service Boundary Proposals
+For each proposed ATOM microservice:
+| Service Name | Business Capability | Why Separate? | Key Data it Owns | API Type |
+API types: REST (sync read-heavy) | Event-driven (async) | Both
+
+## 2. Data Ownership Map
+Which service owns which data entities? Which services share (read-only access) data?
+Flag any data ownership conflicts or shared mutable state.
+
+## 3. Integration Patterns
+How do services communicate?
+| From → To | Pattern | Technology | Sync/Async | Why This Pattern? |
+Patterns: REST | Kafka event | MQ message | Shared DB (anti-pattern — flag if proposed)
+
+## 4. Strangler Fig Migration Plan
+Phase 1 → Phase 2 → Phase 3 migration sequence.
+Which service to extract first and why?
+How does the proxy/router pattern apply?
+
+## 5. ATOM Service Checklist per Proposed Service
+For each service, confirm it will have: its own DB, its own Kafka topics (if async),
+no shared mutable state with other services, circuit breakers for all downstream calls.
+
+## 6. Risks and Open Questions
+What architectural decisions need further analysis? What ADRs should be written?
+
+Label every claim as FACT (from provided analysis) or ASSUMPTION (inferred).`
+    },
+    {
+      id: 'ARCH-03',
+      badge: 'architecture',
+      badgeLabel: 'Architecture',
+      title: 'Generate OpenAPI 3.1 Spec (Spec-First)',
+      desc: 'Generate a complete OpenAPI 3.1 YAML contract from a Stage 2 design. Locks the API contract before implementation so consumer teams can start integration in parallel.',
+      prompt: `You are generating a production-quality OpenAPI 3.1 specification for an ATOM microservice.
+Apply domain rules from .context/PAYMENTS_DOMAIN.md (if payments) and .context/ATOM_CHASSIS.md.
+
+CONFIRM before generating:
+- Stage 2 (Target Mapping) is complete — service name, endpoints, request/response shapes known
+- Business rules register is available (for BR-NNN traceability comments)
+
+SERVICE DETAILS
+Service name: [e.g., PaymentAuthorizationService]
+Base path: /v1/[resource]
+Domain context: [payments | accounts | fraud | [other]]
+Business rules to encode: [BR-001, BR-003, BR-INT-001 — paste rule IDs and statements]
+
+ENDPOINTS NEEDED
+[Describe each endpoint, e.g.:]
+- POST /v1/authorizations — submit an authorization request (sync, returns decision)
+- GET /v1/authorizations/{id} — retrieve a prior authorization decision
+- GET /v1/limits/{maskedPan} — query current spending limits for a card
+
+GENERATE a complete OpenAPI 3.1 .yaml file with:
+
+1. INFO section: title, version (start at 1.0.0), description, contact
+2. SERVERS: at least dev and prod with variable substitution
+3. SECURITY SCHEMES: bearerAuth (JWT) and/or apiKeyAuth as appropriate
+4. PATHS: for each endpoint — summary, description, operationId (camelCase), parameters, requestBody (if applicable), responses
+5. COMPONENTS/SCHEMAS: all request and response models with:
+   - Correct field types and format (int64 for amounts in minor units, date-time for timestamps)
+   - Pattern constraints for sensitive fields (PAN masking: ^XXXX-XXXX-XXXX-[0-9]{4}$)
+   - Required/optional designations
+   - Field descriptions explaining business meaning (not just field name)
+6. ATOM ApiResponse<T> envelope on all responses:
+   {
+     "success": true,
+     "data": { ... },
+     "traceId": "uuid",
+     "timestamp": "ISO8601"
+   }
+7. STANDARD ERROR RESPONSES: 400 BadRequest, 401 Unauthorized, 404 NotFound, 422 UnprocessableEntity, 500 InternalServerError
+8. EXAMPLES: at least one worked example per endpoint (happy path + key error case)
+9. FORGE TRACEABILITY: x-forge-business-rules comments linking schemas to BR-NNN
+
+PAYMENTS-SPECIFIC (include if domain is payments):
+- Amount fields: integer format int64, described as "amount in minor currency units (e.g., pence/cents)"
+- ISO 8583 DE 39 response codes as enum in decision schema: ["00","01","05","12","14","51","54","57","58","61","62","65","91","96"]
+- PAN fields: pattern ^XXXX-XXXX-XXXX-[0-9]{4}$ (masked only — never full PAN in API)
+- CVV/CVC: NEVER include as a field in any schema
+
+After generating, confirm:
+- Every endpoint has at least 3xx/4xx/5xx response documented
+- No legacy field names leaked (CARD-NUMBER → cardId, WS-TXN-AMOUNT → amount)
+- Output file path: docs/architecture/[service-name]-api-spec.yaml`
+    },
+    {
+      id: 'ARCH-02',
+      badge: 'architecture',
+      badgeLabel: 'Architecture',
+      title: 'Architecture Decision Record (ADR)',
+      desc: 'Generate a formal ADR for a significant architectural decision, with alternatives considered and consequences documented.',
+      prompt: `Generate an Architecture Decision Record (ADR) for this project.
+
+Decision to document: [describe the architectural decision]
+Context: [why is this decision being made now? what problem does it solve?]
+Alternatives considered: [what other options were evaluated?]
+Constraints: [non-negotiable requirements that shaped the decision]
+
+Produce an ADR with these sections:
+
+# ADR-[NNN]: [Short Title]
+
+## Status
+Proposed | Accepted | Deprecated | Superseded by ADR-[NNN]
+
+## Date
+[YYYY-MM-DD]
+
+## Context
+What situation or problem makes this decision necessary?
+What forces are at play (technical, business, organizational)?
+
+## Decision
+What was decided? State it clearly in one paragraph.
+
+## Rationale
+Why was this decision made over the alternatives?
+What evidence supports this decision?
+Cite source artifacts, benchmarks, or constraints.
+
+## Alternatives Considered
+For each alternative:
+- What it is
+- Why it was rejected
+- Trade-offs compared to the decision
+
+## Consequences
+### Positive
+What benefits does this decision produce?
+
+### Negative / Trade-offs
+What does this decision cost? What becomes harder?
+
+### Risks
+What could go wrong? How would we know early?
+
+## Follow-up Required
+What actions must happen as a result of this decision?
+
+Label all facts (from provided artifacts) and assumptions (inferred) explicitly.`
+    }
+  ],
+
+  ba: [
+    {
+      id: 'BA-01',
+      badge: 'discovery',
+      badgeLabel: 'Discovery',
+      title: 'Extract Business Rules from Legacy Code',
+      desc: 'Extract, classify, and number all business rules from legacy source code with confidence levels and open questions.',
+      prompt: `You are a business analyst extracting business rules from legacy code.
+Your output will be used to validate modernization designs.
+
+Source code / document to analyze: [PASTE SOURCE OR FILE PATH]
+Business domain: [e.g., payment card authorization, account management]
+
+Produce a Business Rules Register:
+
+## Rules Register
+
+For each rule found, create an entry:
+
+**BR-[NNN]** — [Short Rule Name]
+- **Category:** Validation | Calculation | Routing | Limit/Threshold | Status Check | Regulatory | Fallback
+- **Rule Statement:** One precise sentence stating the rule in business language (no code jargon)
+- **Source:** [File name, lines NNN-NNN]
+- **Confidence:** HIGH (directly observable) | MEDIUM (inferred) | LOW (guessed from patterns)
+- **Open Questions:** What would need to be confirmed to reach HIGH confidence?
+- **Dependencies:** Other rules or data this rule depends on
+
+## Summary Statistics
+- Total rules found: N
+- By category: Validation: N, Calculation: N, etc.
+- HIGH confidence: N | MEDIUM: N | LOW: N
+- Rules requiring BA/SME confirmation: list BR-NNN IDs
+
+## Rules NOT Found but Expected
+List business rules you would expect to find in a [domain] system
+that are NOT present in this code — potential gaps or rules that live elsewhere.
+
+## Hardcoded vs. Configurable
+What percentage of rules are hardcoded vs. configurable?
+Which high-value rules should be externalized in the modern system?
+
+Do not generate any code. Business language only.`
+    },
+    {
+      id: 'BA-02',
+      badge: 'requirements',
+      badgeLabel: 'Requirements',
+      title: 'Generate User Stories from Legacy Analysis',
+      desc: 'Convert legacy system analysis into properly structured user stories with acceptance criteria and business rules traced.',
+      prompt: `You are a business analyst converting legacy system capabilities into user stories.
+
+Legacy system analysis: [PASTE TX_ARCH.md content or system description]
+Business rules register: [PASTE BR-NNN rules or key rules]
+Target users/personas: [e.g., cardholder, merchant, fraud analyst, operations team]
+
+For each distinct capability in the legacy system, generate a user story:
+
+## User Story: [US-NNN] — [Short Title]
+
+**As a** [persona]
+**I want to** [action]
+**So that** [business value]
+
+**Business Rules Implemented**
+List the BR-NNN rules that this story must satisfy.
+
+**Acceptance Criteria**
+Use Given/When/Then format:
+- Given [context], When [action], Then [expected outcome]
+- (Minimum 3 criteria per story — happy path + 2 error/edge cases)
+
+**Non-Functional Requirements**
+- Performance: [e.g., response within 150ms]
+- Security: [e.g., PAN must not appear in logs]
+- Compliance: [e.g., PCI DSS, regulatory hold]
+
+**Out of Scope**
+What this story explicitly does NOT cover.
+
+**Open Questions**
+What must be clarified before development begins?
+
+**Definition of Done**
+- [ ] All acceptance criteria pass
+- [ ] Business rules BR-NNN verified
+- [ ] Unit and integration tests written
+- [ ] Code reviewed against FORGE + ATOM standards
+- [ ] Performance tested within SLA`
+    }
+  ],
+
+  qa: [
+    {
+      id: 'QA-01',
+      badge: 'testing',
+      badgeLabel: 'Testing',
+      title: 'Test Strategy for Modernized Service',
+      desc: 'Generate a comprehensive test strategy for a modernized service, including parallel-run comparison testing.',
+      prompt: `You are a QA engineer creating a test strategy for a modernized service.
+
+Service being modernized: [service name and description]
+Legacy system: [brief description of what is being replaced]
+Business rules to test: [list BR-NNN rules or paste rules register]
+Performance SLA: [e.g., P99 < 150ms]
+Compliance requirements: [e.g., PCI DSS, SOX]
+
+Generate a Test Strategy document:
+
+## 1. Test Scope
+What is in scope vs. out of scope for this test effort?
+
+## 2. Test Levels
+### Unit Tests
+- Coverage target: 80% line, 90% branch on business logic
+- Framework: JUnit 5 + Mockito + AssertJ
+- Responsibilities: Developer
+
+### Integration Tests
+- Test real component interactions with Testcontainers
+- Database, Kafka, and downstream service integration
+- Responsibilities: Developer
+
+### API Contract Tests
+- Verify API conforms to OpenAPI spec
+- Consumer-driven contract tests (Pact) if applicable
+
+### Parallel Run Tests (critical for modernization)
+- Run legacy and modern system simultaneously on same inputs
+- Compare outputs — any mismatch is a defect
+- Define: what counts as a match? (exact byte-for-byte? semantic equivalence?)
+- Define: how long to run parallel before cutover?
+
+### Performance Tests
+- Baseline: measure legacy system P50/P95/P99
+- Target: modern must meet or beat legacy baseline
+- Tool: [Gatling / JMeter / k6]
+- Test scenarios: peak load (N TPS), sustained load, spike test
+
+### UAT / Business Acceptance Tests
+- Real business scenarios tested by domain experts
+- Test data: synthetic data matching production patterns (no real PAN/PII)
+
+## 3. Business Rule Test Coverage
+For each BR-NNN rule, at least one test must verify it.
+| BR-NNN | Rule Summary | Test Level | Test Name | Coverage Status |
+
+## 4. Risk-Based Test Priority
+Given the risk map from T4, which areas need the most test focus?
+
+## 5. Test Environment Requirements
+What environments, data, and access are needed?`
+    }
+  ],
+
+  devsecops: [
+    {
+      id: 'SEC-01',
+      badge: 'security',
+      badgeLabel: 'Security',
+      title: 'Threat Model for ATOM Service',
+      desc: 'Generate a STRIDE-based threat model for a new or modernized ATOM service.',
+      prompt: `You are a security engineer performing threat modeling for a new ATOM microservice.
+Apply security rules from .context/CORE_SKILLS.md (Section: Security Guardrails).
+
+Service to threat model: [service name and description]
+API: [describe the REST endpoints]
+Data handled: [what sensitive data does this service process? e.g., PAN, account numbers]
+External integrations: [list downstream services called]
+Authentication mechanism: [e.g., JWT from internal IdP, mutual TLS]
+Deployment: [Kubernetes on AWS/Azure/GCP | on-prem | hybrid]
+
+Using the STRIDE threat model, produce:
+
+## 1. Asset Inventory
+What must be protected? Data, services, credentials, keys.
+
+## 2. Trust Boundaries
+Where do trust levels change? (e.g., internet → API gateway → internal services → database)
+Draw an ASCII trust boundary diagram.
+
+## 3. STRIDE Analysis
+For each threat category, identify specific threats to this service:
+
+### Spoofing — Can an attacker impersonate a legitimate caller?
+### Tampering — Can data be modified in transit or at rest?
+### Repudiation — Can actions be denied? Is audit logging complete?
+### Information Disclosure — Can sensitive data be exposed?
+### Denial of Service — Can the service be overwhelmed or made unavailable?
+### Elevation of Privilege — Can an attacker gain more access than intended?
+
+For each threat: Threat | Likelihood (H/M/L) | Impact (H/M/L) | Current Mitigations | Recommended Controls
+
+## 4. Security Controls Required
+Mapped to FORGE CORE_SKILLS.md guardrails (SG-1 through SG-6):
+- SG-1 (No hardcoded secrets): [control]
+- SG-2 (Input validation): [control]
+- SG-3 (No SQL injection): [control]
+- SG-4 (No PII in logs): [control]
+- SG-5 (HTTPS/TLS): [control]
+- SG-6 (Least privilege): [control]
+
+## 5. Top 5 Security Risks
+Ranked by risk score (Likelihood × Impact). Include remediation priority.
+
+## 6. Security Testing Requirements
+Specific tests that must pass before production deployment.`
+    }
+  ],
+
+  pm: [
+    {
+      id: 'PM-01',
+      badge: 'requirements',
+      badgeLabel: 'Requirements',
+      title: 'Modernization Roadmap Summary',
+      desc: 'Generate an executive-level summary of a modernization initiative from technical analysis, for stakeholder communication.',
+      prompt: `You are helping a Product Manager communicate a technical modernization program to business stakeholders.
+
+Technical analysis available: [PASTE TX_ARCH.md summary and TX_POC_OPTIONS.md]
+Business context: [what business problem is this modernization solving?]
+Timeline constraints: [any hard deadlines or business events]
+Audience: [e.g., CTO, business unit leader, risk committee]
+
+Generate an executive summary:
+
+## Executive Summary (1 page)
+What is being modernized, why now, and what the business impact will be.
+
+## Current State Problems
+In business language (no technical jargon):
+- What is slow, risky, or expensive about the current system?
+- What opportunities are being missed due to the current limitations?
+
+## Proposed Approach
+- Which POC option is recommended and why?
+- What is the migration strategy (no big-bang — explain strangler fig simply)?
+- What stays and what changes?
+
+## Timeline and Milestones
+| Milestone | What Gets Done | Business Outcome | Target Date |
+
+## Investment and Risk
+- What investment (people, time, tooling) is required?
+- What are the top 3 risks and how are they being managed?
+- What does success look like? (measurable outcomes)
+
+## What We Need From Business
+- Which business stakeholders must be involved?
+- What decisions need business approval before engineering proceeds?
+
+Keep language non-technical. Avoid acronyms without explanation.
+Every claim must be grounded in the provided analysis — no invented facts.`
+    }
+  ],
+
+  lead: [
+    {
+      id: 'LEAD-02',
+      badge: 'architecture',
+      badgeLabel: 'Architecture',
+      title: 'Package Stage Delivery (/package-delivery)',
+      desc: 'Package all artifacts from a completed FORGE stage into a traceable delivery package for stakeholder review, audit, and sign-off. Builds the full BR → code → test traceability matrix.',
+      prompt: `You are a lead engineer packaging and validating all artifacts from a completed FORGE stage.
+Apply rules from .context/CORE_SKILLS.md.
+
+STAGE BEING PACKAGED
+Stage: [e.g., Stage 1 — Legacy Understanding | Stage 2 — Target Mapping | Stage 3 — Code Generation]
+Project: [project name]
+Date: [YYYY-MM-DD]
+Prepared by: [name / AI-assisted]
+
+ARTIFACTS AVAILABLE
+- [List each artifact with its file path or paste inline]
+- Discovery report / legacy analysis: [paste or file path]
+- Business rules register: [paste or file path]
+- Open questions log: [paste all outstanding OQ-NNN items]
+- Architecture / design documents: [paste or file path]
+- Code review report (if Stage 3+): [paste or file path]
+- Test results (if Stage 3+): [paste or file path]
+
+GATE TO EVALUATE: [Gate N from governance/review-gates.md]
+
+TASK — produce ALL of the following:
+
+## 1. PACKAGE CONTENTS TABLE
+| # | Artifact | File / Location | Status | Notes |
+
+## 2. TRACEABILITY MATRIX
+For each business rule in this stage:
+| BR-NNN | Requirement / Story | Architecture Component | Implementation File | Test File | Test Status |
+
+## 3. REVIEW GATE STATUS
+For each gate item in governance/review-gates.md for this stage:
+| # | Gate Item | Status (PASS/FAIL/PARTIAL/N/A) | Evidence | Gap / Action Required |
+
+## 4. OPEN QUESTIONS AND GAPS
+| # | Question / Gap | Impact | Owner | Target Resolution Date |
+
+## 5. DECISIONS LOG
+| Decision ID | Decision | Rationale | Made By | Date | ADR Reference |
+
+## 6. SIGN-OFF REQUIREMENTS
+| Role | Name | Status | Notes |
+
+## 7. NEXT STAGE PREREQUISITES
+What must be resolved before proceeding to the next stage?
+
+RULES
+- A gate item is PASS only if there is explicit evidence — not assumed
+- A gap is a finding, not a blocker — business decides whether to accept or resolve
+- Do NOT mark a gate as PASSED unless every mandatory check is complete
+- Use governance/delivery-package-template.md as the output template
+
+OUTPUT: A complete delivery package document following governance/delivery-package-template.md`
+    },
+    {
+      id: 'LEAD-01',
+      badge: 'architecture',
+      badgeLabel: 'Architecture',
+      title: 'Review Gate Checklist',
+      desc: 'Generate a stage-gate checklist for a pull request or design review, enforcing FORGE + ATOM standards.',
+      prompt: `You are a lead engineer conducting a stage-gate review.
+Apply rules from .context/CORE_SKILLS.md and .context/ATOM_CHASSIS.md.
+
+Review type: [Code Review | Design Review | Architecture Review | Security Review]
+Work being reviewed: [describe what is being reviewed — PR, design doc, ADR]
+
+## Stage Gate: [Stage Name] Review Checklist
+
+### FORGE Constitution (non-negotiable)
+- [ ] No invented business logic — every rule traced to BR-NNN or approved requirement
+- [ ] All behavioral changes from legacy documented as [BEHAVIORAL CHANGE: CBD-NNN] and approved
+- [ ] Facts separated from assumptions — all assumptions explicit with confidence levels
+- [ ] All open questions resolved before this stage
+
+### ATOM Conformance
+- [ ] @AtomService used (not plain @Service)
+- [ ] @AtomRepository used (not plain @Repository)
+- [ ] All controllers return ResponseEntity<ApiResponse<T>>
+- [ ] All downstream calls have @CircuitBreaker + fallback
+- [ ] Structured logging with key-value pairs, no PII/PAN
+- [ ] No hardcoded URLs, hostnames, or service names
+- [ ] Circuit breaker config in application.yml per service
+
+### Security (CORE_SKILLS.md SG-1 to SG-6)
+- [ ] SG-1: No hardcoded secrets anywhere in code or config
+- [ ] SG-2: Input validation on all entry points
+- [ ] SG-3: No SQL injection risk (parameterized queries only)
+- [ ] SG-4: No PAN, CVV, SSN, or credentials in any log
+- [ ] SG-5: HTTPS/TLS for all external communications
+- [ ] SG-6: Least privilege in all IAM/RBAC configurations
+
+### Testing
+- [ ] Unit tests: 80% line / 90% branch coverage on business logic
+- [ ] One test per business rule (BR-NNN)
+- [ ] All error paths tested
+- [ ] Integration tests with Testcontainers
+- [ ] Parallel run test plan in place (for modernization)
+
+### Observability
+- [ ] Structured logging at entry/exit of all service methods
+- [ ] Correlation ID propagated from inbound to all outbound calls
+- [ ] Metrics at all API entry points (rate, errors, duration)
+
+### Documentation
+- [ ] Business rules register updated
+- [ ] Assumption register updated
+- [ ] ADRs written for all significant architectural decisions
+- [ ] Traceability: generated code → legacy program → business rule
+
+Overall assessment: APPROVED | APPROVED WITH CONDITIONS | REJECTED
+Conditions (if any): [list what must change before merge]`
+    }
+  ]
+};
+
+// ─── RENDER ─────────────────────────────────────────────────────────────────
+
+function renderPrompts(containerId, prompts) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = prompts.map((p, i) => `
+    <div class="prompt-card" id="card-${p.id}">
+      <div class="prompt-card-header" onclick="toggleCard('${p.id}')">
+        <span class="prompt-badge badge-${p.badge}">${p.badgeLabel}</span>
+        <span class="prompt-title">${p.title}</span>
+        <span class="prompt-expand">▼</span>
+      </div>
+      <div class="prompt-desc">${p.desc}</div>
+      <div class="prompt-body">
+        <div class="prompt-text">${escHtml(p.prompt)}</div>
+        <button class="copy-btn" id="btn-${p.id}" onclick="copyPrompt('${p.id}', this)">
+          📋 Copy Prompt
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function toggleCard(id) {
+  const card = document.getElementById('card-' + id);
+  card.classList.toggle('open');
+}
+
+function copyPrompt(id, btn) {
+  const p = Object.values(PROMPTS).flat().find(x => x.id === id);
+  if (!p) return;
+  navigator.clipboard.writeText(p.prompt).then(() => {
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '📋 Copy Prompt';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+// ─── NAVIGATION ─────────────────────────────────────────────────────────────
+
+const SECTIONS = ['home','preengagement','developer','architect','qa','devsecops','pm','ba','lead',
+  'discovery','requirements','architecture','development','testing','security','operations'];
+
+function showSection(id) {
+  SECTIONS.forEach(s => {
+    const el = document.getElementById('section-' + s);
+    if (el) el.style.display = s === id ? '' : 'none';
+  });
+  document.querySelectorAll('.sidebar-item').forEach(el => {
+    el.classList.toggle('active', el.getAttribute('onclick') === `showSection('${id}')`);
+  });
+  window.scrollTo(0, 0);
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+
+function init() {
+  renderPrompts('prompts-preengagement', PROMPTS.preengagement);
+  renderPrompts('prompts-developer', PROMPTS.developer);
+  renderPrompts('prompts-architect', PROMPTS.architect);
+  renderPrompts('prompts-ba', PROMPTS.ba);
+  renderPrompts('prompts-qa', PROMPTS.qa);
+  renderPrompts('prompts-devsecops', PROMPTS.devsecops);
+  renderPrompts('prompts-pm', PROMPTS.pm);
+  renderPrompts('prompts-lead', PROMPTS.lead);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

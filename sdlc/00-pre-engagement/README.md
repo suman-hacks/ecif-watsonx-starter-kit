@@ -1,99 +1,164 @@
-# Stage 00: Pre-Engagement Analysis
+# Stage 0: Pre-Engagement Analysis
 
-## Purpose
-
-Pre-Engagement is the AI-assisted codebase analysis phase conducted **before** a discovery workshop or POC scoping session. Its goal is to give workshop facilitators and technical leads a factual, evidence-based picture of the current system so that workshop time is spent on decisions — not on discovering things the codebase could have told you.
-
-This stage transforms raw source code into five structured analysis documents that anchor every conversation in reality rather than assumption.
-
-## When to Use
-
-- Before a POC scoping workshop
-- Before a modernization or re-platforming assessment
-- Before an AI/ML feasibility study (e.g., "can we add intelligent decisioning here?")
-- Before a vendor or partner technical deep-dive
-- When onboarding a new team onto an existing system
-
-## Who Runs It
-
-| Role | Responsibility |
-|---|---|
-| Lead Engineer / Architect | Runs T1–T4 against the codebase |
-| Business Analyst (optional) | Reviews T5 POC options for business alignment |
-| Workshop Facilitator | Receives all five documents before the workshop |
-
-**Time commitment:** Each task takes 5–10 minutes to run (prompt + review output). Full pre-engagement analysis = 30–60 minutes.
-
-## Output Files Produced
-
-All outputs are placed in a `pre-engagement/` folder and shared with the workshop facilitator at least 24 hours before the session.
-
-| File | Task | Contents |
-|---|---|---|
-| `TX_ARCH.md` | T1 | System architecture, tech stack, data flow, ASCII diagram |
-| `TX_DECISIONS.md` | T2 | Decision logic inventory, rules, hardcoded vs configurable |
-| `TX_INTEGRATIONS.md` | T3 | Integration map, latency budget, stand-in behavior |
-| `TX_RISK_MAP.md` | T4 | Complexity hotspots, test coverage, regression risk |
-| `TX_POC_OPTIONS.md` | T5 | POC options with effort estimates and recommendation |
-
-Replace `TX` with your transaction or project code (e.g., `AUTH_ARCH.md`, `PMT_DECISIONS.md`).
-
-## Process
-
-```
-1. Clone / access the relevant codebase
-2. Open your AI coding assistant (GitHub Copilot, Claude Code, watsonx Code Assist, Cursor)
-3. Open Task T1 → copy the prompt → paste into your assistant with codebase context
-4. Review the output: correct anything obviously wrong
-5. Save output as TX_ARCH.md
-6. Repeat for T2, T3, T4
-7. Run T5 last — it synthesizes T1–T4
-8. Share all five documents with workshop facilitator
-9. Bring to workshop as shared reference
-```
-
-## Workshop Connection
-
-The five documents feed directly into the workshop agenda:
-
-- **T1 ARCH** → Used in "Understand the Current State" segment
-- **T2 DECISIONS** → Used in "Where Could AI Add Value?" segment
-- **T3 INTEGRATIONS** → Used in "What Are the Integration Constraints?" segment
-- **T4 RISK MAP** → Used in "What Could Go Wrong?" segment
-- **T5 POC OPTIONS** → Used in "Which POC Should We Run?" decision segment
-
-The workshop facilitator should read all five documents before the session and prepare probing questions based on the unknowns and gaps identified.
-
-## Note About Mainframe and Non-Repo Systems
-
-If COBOL, CICS, JCL, or other mainframe code exists but is **not** in the repository being analyzed:
-
-1. Annotate each output file with a `[MAINFRAME GAP]` marker where the analysis is incomplete
-2. Document what is known about the mainframe component from documentation, comments, or team knowledge
-3. Add a dedicated "Mainframe Integration Points" section to T3 INTEGRATIONS even if based on partial information
-4. Flag this in T4 RISK MAP as a high-risk unknown
-5. T5 POC OPTIONS should include a mainframe access path as a data/system requirement
-
-Similarly, if systems exist behind APIs with no source access (SaaS platforms, vendor black boxes), mark these as `[BLACK BOX]` and document what is observable from the integration layer.
-
-## Tool-Specific Notes
-
-| Tool | Guidance |
-|---|---|
-| **GitHub Copilot** | Use Copilot Chat with workspace context enabled. Type `@workspace` before pasting the prompt to ground it in your codebase. |
-| **Claude Code** | Claude Code automatically indexes the codebase. Paste the prompt directly. Use `--dangerously-skip-permissions` only in isolated analysis environments. |
-| **watsonx Code Assist** | Use the chat interface with the project files open. Reference specific file paths in the prompt for best results. |
-| **Cursor** | Use Cursor's Composer with codebase indexing enabled. The `@codebase` reference will ground the analysis. |
-
-## Quality Bar
-
-A pre-engagement package is ready when:
-- [ ] All five output documents exist
-- [ ] Each document has fewer than 5 `[UNKNOWN]` markers (or all unknowns are explicitly explained)
-- [ ] The ASCII architecture diagram in T1 matches what the team knows to be true
-- [ ] At least 3 POC options are documented in T5 with effort estimates
-- [ ] The workshop facilitator has confirmed receipt and has no blocking questions
+> **AI-Accelerated Discovery — Run this before any modernization workshop.**
 
 ---
 
-*FORGE Framework — Stage 00: Pre-Engagement | Next Stage: 01-Discovery*
+## What This Is
+
+Pre-engagement analysis uses AI to analyze a legacy codebase and produce a set of structured discovery documents **before** a workshop or modernization kickoff. Instead of spending the first workshop session drawing architecture diagrams on a whiteboard, you walk in with evidence-based documents the team can react to, correct, and build on.
+
+The result: workshops that are faster, sharper, and grounded in what the code actually does — not what people remember it doing.
+
+---
+
+## The 5-Task Workflow
+
+| Task | Output File | Who Runs It | Time |
+|---|---|---|---|
+| **T1** — System Architecture Analysis | `TX_ARCH.md` | Lead Engineer / Architect | 5–10 min |
+| **T2** — Decision Logic Inventory | `TX_DECISION_INVENTORY.md` | Same engineer, same repo | 10–15 min |
+| **T3** — Integration & Latency Map | `TX_INTEGRATIONS.md` | Same engineer | 5–10 min |
+| **T4** — Complexity & Risk Map | `TX_RISK_MAP.md` | Same engineer | 5–10 min |
+| **T5** — POC Option Analysis | `TX_POC_OPTIONS.md` | Same or tech lead | 10–15 min |
+
+**Run T5 last.** It requires the outputs from T1–T4 as input.
+
+Total time: approximately 35–60 minutes for one engineer, producing a complete pre-workshop picture of the system.
+
+---
+
+## How to Run Each Task
+
+### Step 1: Open Your AI Tool in the Repository Root
+
+| Tool | How to Open |
+|---|---|
+| **Claude Code** | `cd your-repo && claude` — full codebase access automatically |
+| **GitHub Copilot (VS Code)** | Open the repo in VS Code, use `@workspace` prefix in Copilot Chat |
+| **Cursor** | Open repo in Cursor, use `@codebase` in Composer |
+| **watsonx Code Assist** | Open key entry-point files first, then paste prompt |
+| **Claude.ai / other web tools** | Paste the prompt into chat; reference files by pasting their content |
+
+### Step 2: Copy the Prompt for Each Task
+
+Open the prompt file for each task:
+- [T1-system-architecture-analysis.md](T1-system-architecture-analysis.md)
+- [T2-decision-logic-inventory.md](T2-decision-logic-inventory.md)
+- [T3-integration-and-latency-map.md](T3-integration-and-latency-map.md)
+- [T4-complexity-and-risk-map.md](T4-complexity-and-risk-map.md)
+- [T5-poc-option-analysis.md](T5-poc-option-analysis.md)
+
+Copy the prompt text, paste into your AI tool, and run.
+
+Or use the FORGE web portal: open `web-ui/index.html` → **Pre-Engagement Analysis** → click **Copy Prompt**.
+
+Or use the Claude Code skill: `/pre-engagement`
+
+### Step 3: Review and Annotate the Output
+
+After receiving each AI output:
+1. Read it carefully against what you know about the system
+2. Mark any section where the AI was wrong or incomplete: `[ENGINEER NOTE: actual behavior is X]`
+3. Add any mainframe context the AI couldn't see in the distributed code
+4. Answer any `[UNKNOWN — needs investigation]` items you can resolve from memory
+
+**The AI analysis is a starting point, not the final answer.** Your engineering judgment is the final word.
+
+### Step 4: Save Outputs to `pre-engagement/` Folder
+
+```
+your-project-repo/
+└── pre-engagement/
+    ├── TX_ARCH.md
+    ├── TX_DECISION_INVENTORY.md
+    ├── TX_INTEGRATIONS.md
+    ├── TX_RISK_MAP.md
+    └── TX_POC_OPTIONS.md
+```
+
+### Step 5: Share with Workshop Facilitators
+
+Share the completed files before the workshop. Facilitators use them to:
+- Anchor the "Current State" discussion to real code evidence
+- Identify which areas need deeper investigation in the session
+- Propose concrete POC options (from T5) for the group to react to
+
+---
+
+## If the System Spans Multiple Repositories
+
+Run T1–T3 in each repository separately. Then consolidate:
+
+```
+You have run pre-engagement analysis on multiple repositories that make up our system.
+The output files are: [list TX_ARCH.md files from each repo]
+
+Produce CONSOLIDATED_TX_AUTH_VIEW.md that:
+1. Merges into one unified end-to-end flow diagram
+2. Shows which repo/service owns which step in the flow
+3. Consolidates the integration inventory (deduplicating cross-repo calls)
+4. Identifies flows where a single transaction decision spans multiple repos
+5. Highlights where you would draw a POC boundary
+
+Resolve contradictions between analyses and flag them explicitly.
+```
+
+---
+
+## If Significant Logic Lives on the Mainframe
+
+When reviewing output files, annotate anywhere the analysis is missing mainframe-hosted logic:
+
+```
+[MAINFRAME GAP]: The authorization engine calls CICS transaction AUTHZ001 at this step.
+This transaction contains [known behavior from team knowledge]. The COBOL source is in
+the mainframe repo at [path] and has not been analyzed in this pass.
+```
+
+Even a few bullet points describing what lives on the mainframe will significantly improve workshop outcomes.
+
+---
+
+## Workshop Connection
+
+Each task maps directly to a workshop session:
+
+| Task | Workshop Segment |
+|---|---|
+| T1 — Architecture | "Current State Overview" — project the diagram, skip the whiteboard |
+| T2 — Decision Logic | "Key Problems to Solve" — point to specific decision locations as pain points |
+| T3 — Integrations | "Application Complexity & Boundaries" — scope POC boundaries realistically |
+| T4 — Risk Map | "Define POC Scope" — avoid touching high-risk areas in the initial POC |
+| T5 — POC Options | "Candidate POC Scenarios" — give the room concrete proposals to react to |
+
+---
+
+## Completion Checklist
+
+Before the workshop, confirm:
+
+**Output Files**
+- [ ] `TX_ARCH.md` — generated and reviewed by engineer for accuracy
+- [ ] `TX_DECISION_INVENTORY.md` — generated and reviewed for accuracy
+- [ ] `TX_INTEGRATIONS.md` — generated and reviewed for accuracy
+- [ ] `TX_RISK_MAP.md` — generated and reviewed for accuracy
+- [ ] `TX_POC_OPTIONS.md` — generated using T1–T4 outputs and reviewed
+- [ ] `CONSOLIDATED_TX_AUTH_VIEW.md` — generated if multi-repo
+
+**Engineer Review**
+- [ ] Architecture diagram accurately reflects the real flow (no hallucinated services)
+- [ ] Decision logic inventory captures the primary decision locations (no major blind spots)
+- [ ] Integration list is complete — no critical dependencies missing
+- [ ] Mainframe components annotated where applicable
+- [ ] T5 POC options are realistic — flagged any that are off-base
+
+**Redaction**
+- [ ] All files reviewed — no production credentials, real customer data, or confidential IP
+- [ ] Files are safe to share with workshop facilitators and external participants
+
+---
+
+*FORGE Stage 0 — Pre-Engagement Analysis*
+*Full prompt details: see individual T1–T5 files in this directory.*
+*Web portal access: open `web-ui/index.html` → Pre-Engagement Analysis*

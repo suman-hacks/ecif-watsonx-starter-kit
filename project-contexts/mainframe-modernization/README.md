@@ -37,9 +37,9 @@ Stage 05 (Development)      → Java generation (agents/05-code-generator-agent.
 Stage 05 (Review)           → Hardening (agents/06-reviewer-agent.md)
 ```
 
-## Key Knowledge Packs to Load
+## Context Files to Load
 
-- `knowledge-packs/legacy-cobol/` — COBOL reading guide
-- `knowledge-packs/microservices/` — target architecture patterns
-- `knowledge-packs/event-driven/` — event-driven patterns for mainframe replacement
-- `knowledge-packs/domains/payments-banking/` — if modernizing payment systems
+- `.context/MODERNIZATION.md` — COBOL→Java type mapping, Strangler Fig, behavioral preservation rules
+- `.context/COBOL_READING_GUIDE.md` — How to read and analyze COBOL programs
+- `.context/ATOM_CHASSIS.md` — Target architecture patterns (ATOM microservices chassis)
+- `.context/PAYMENTS_DOMAIN.md` — If modernizing payment systems (ISO 8583, PCI-DSS, card lifecycle)

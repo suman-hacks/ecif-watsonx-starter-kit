@@ -1,0 +1,514 @@
+openapi: "3.1.0"
+
+# =============================================================================
+# FORGE OpenAPI 3.1 Specification Template — ATOM Microservice
+#
+# Usage:
+#   1. Copy this file to docs/architecture/[service-name]-api-spec.yaml
+#   2. Fill in every [USER FILLS] section
+#   3. Use /generate-openapi-spec Claude skill to auto-populate from a design doc
+#   4. This spec is the source of truth for: API contracts, code generation,
+#      consumer team reviews, and test scaffolding
+#
+# Tools:
+#   - Swagger UI: npx @redocly/cli preview-docs [file]
+#   - Validate:   npx @redocly/cli lint [file]
+#   - Generate Java stubs: openapi-generator-cli generate -i [file] -g spring -o [output]
+# =============================================================================
+
+info:
+  title: "[USER FILLS — e.g., Payment Authorization Service API]"
+  version: "1.0.0"
+  description: |
+    [USER FILLS — 2-3 sentences describing what this API does and who consumes it.
+    Example: "Real-time card authorization API. Receives authorization requests from
+    acquiring networks via the API gateway, applies business rules and spending limits,
+    and returns approve/decline decisions. Target P99 response time: 150ms."]
+  contact:
+    name: "[USER FILLS — team name, e.g., Payments Platform Team]"
+    email: "[USER FILLS — team email or distribution list]"
+  license:
+    name: "Internal — Proprietary"
+    identifier: "LicenseRef-proprietary"
+
+# =============================================================================
+# SERVERS
+# =============================================================================
+servers:
+  - url: "https://api.internal.yourorg.com/payments/authorization"
+    description: "Production"
+  - url: "https://api.staging.internal.yourorg.com/payments/authorization"
+    description: "Staging"
+  - url: "http://localhost:8080"
+    description: "Local development"
+
+# =============================================================================
+# SECURITY
+# =============================================================================
+security:
+  - bearerAuth: []
+  - apiKeyAuth: []
+
+# =============================================================================
+# TAGS — Group related endpoints
+# =============================================================================
+tags:
+  - name: "Authorizations"
+    description: "Card authorization request processing"
+  - name: "Limits"
+    description: "Spending limit queries and management"
+  - name: "Health"
+    description: "Service health and readiness checks"
+
+# =============================================================================
+# PATHS — API Endpoints
+# =============================================================================
+paths:
+
+  # ---------------------------------------------------------------------------
+  # POST /v1/authorizations — Submit an authorization request
+  # ---------------------------------------------------------------------------
+  /v1/authorizations:
+    post:
+      operationId: "createAuthorization"
+      summary: "Submit a card authorization request"
+      description: |
+        Evaluates a card authorization request and returns an approve or decline decision.
+        Applies rules in this order: card existence, card status, velocity, daily limit, fraud score.
+        Immutable once created — the returned authorization ID is the audit reference.
+      tags:
+        - "Authorizations"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthorizationRequest"
+            examples:
+              approvedTransaction:
+                summary: "Standard approved transaction"
+                value:
+                  maskedPan: "XXXX-XXXX-XXXX-1234"
+                  amount: 5000
+                  currency: "ZAR"
+                  merchantId: "MCH-0012345"
+                  merchantCategoryCode: "5411"
+                  terminalId: "TRM-00987"
+                  correlationId: "txn-2026-04-24-001"
+              declinedInsufficientFunds:
+                summary: "Decline — insufficient funds"
+                value:
+                  maskedPan: "XXXX-XXXX-XXXX-5678"
+                  amount: 999999
+                  currency: "ZAR"
+                  merchantId: "MCH-0012345"
+                  merchantCategoryCode: "5411"
+                  terminalId: "TRM-00987"
+                  correlationId: "txn-2026-04-24-002"
+      responses:
+        "200":
+          description: "Authorization decision returned (may be approved or declined)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseAuthorization"
+              examples:
+                approved:
+                  summary: "Approved"
+                  value:
+                    status: "SUCCESS"
+                    data:
+                      authorizationId: "AUTH-2026-04-24-00001"
+                      responseCode: "00"
+                      responseDescription: "Approved"
+                      maskedPan: "XXXX-XXXX-XXXX-1234"
+                      amount: 5000
+                      currency: "ZAR"
+                      decidedAt: "2026-04-24T10:15:30Z"
+                declined:
+                  summary: "Declined — insufficient funds"
+                  value:
+                    status: "SUCCESS"
+                    data:
+                      authorizationId: "AUTH-2026-04-24-00002"
+                      responseCode: "51"
+                      responseDescription: "Insufficient funds"
+                      maskedPan: "XXXX-XXXX-XXXX-5678"
+                      amount: 999999
+                      currency: "ZAR"
+                      decidedAt: "2026-04-24T10:15:31Z"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # ---------------------------------------------------------------------------
+  # GET /v1/authorizations/{authorizationId} — Retrieve an authorization
+  # ---------------------------------------------------------------------------
+  /v1/authorizations/{authorizationId}:
+    get:
+      operationId: "getAuthorization"
+      summary: "Retrieve an authorization decision by ID"
+      tags:
+        - "Authorizations"
+      parameters:
+        - name: authorizationId
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^AUTH-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{5}$"
+          example: "AUTH-2026-04-24-00001"
+      responses:
+        "200":
+          description: "Authorization found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseAuthorization"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # ---------------------------------------------------------------------------
+  # GET /v1/limits/{maskedPan} — Query spending limits for a card
+  # ---------------------------------------------------------------------------
+  /v1/limits/{maskedPan}:
+    get:
+      operationId: "getCardLimits"
+      summary: "Get spending limits for a card"
+      tags:
+        - "Limits"
+      parameters:
+        - name: maskedPan
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^XXXX-XXXX-XXXX-[0-9]{4}$"
+          example: "XXXX-XXXX-XXXX-1234"
+          description: "Masked PAN — last 4 digits only. Full PAN must never appear in a URL."
+      responses:
+        "200":
+          description: "Limits returned"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseCardLimits"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  # ---------------------------------------------------------------------------
+  # Health checks (ATOM standard)
+  # ---------------------------------------------------------------------------
+  /actuator/health:
+    get:
+      operationId: "healthCheck"
+      summary: "Service health check"
+      tags:
+        - "Health"
+      security: []   # No auth required for health check
+      responses:
+        "200":
+          description: "Service is healthy"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+        "503":
+          description: "Service is unhealthy"
+
+  /actuator/health/readiness:
+    get:
+      operationId: "readinessCheck"
+      summary: "Readiness probe — is the service ready to accept traffic?"
+      tags:
+        - "Health"
+      security: []
+      responses:
+        "200":
+          description: "Service is ready"
+        "503":
+          description: "Service is not ready (database or downstream dependency unavailable)"
+
+# =============================================================================
+# COMPONENTS
+# =============================================================================
+components:
+
+  # ---------------------------------------------------------------------------
+  # Security Schemes
+  # ---------------------------------------------------------------------------
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "JWT token issued by the internal identity provider"
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: "API key for service-to-service authentication"
+
+  # ---------------------------------------------------------------------------
+  # Reusable Responses
+  # ---------------------------------------------------------------------------
+  responses:
+    BadRequest:
+      description: "Invalid request — validation failed"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiResponseError"
+          example:
+            status: "ERROR"
+            error:
+              code: "VALIDATION_ERROR"
+              message: "Request validation failed"
+              details:
+                - field: "amount"
+                  message: "Amount must be positive"
+    Unauthorized:
+      description: "Authentication required or token invalid"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiResponseError"
+    NotFound:
+      description: "Resource not found"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiResponseError"
+    UnprocessableEntity:
+      description: "Request is valid but cannot be processed (e.g., duplicate authorization ID)"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiResponseError"
+    InternalServerError:
+      description: "Unexpected server error"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiResponseError"
+
+  # ---------------------------------------------------------------------------
+  # Schemas
+  # ---------------------------------------------------------------------------
+  schemas:
+
+    # ATOM standard envelope — wraps all successful responses
+    ApiResponseAuthorization:
+      type: object
+      required: [status, data]
+      properties:
+        status:
+          type: string
+          enum: [SUCCESS]
+        data:
+          $ref: "#/components/schemas/AuthorizationResponse"
+
+    ApiResponseCardLimits:
+      type: object
+      required: [status, data]
+      properties:
+        status:
+          type: string
+          enum: [SUCCESS]
+        data:
+          $ref: "#/components/schemas/CardLimits"
+
+    ApiResponseError:
+      type: object
+      required: [status, error]
+      properties:
+        status:
+          type: string
+          enum: [ERROR]
+        error:
+          $ref: "#/components/schemas/ErrorDetail"
+
+    ErrorDetail:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: "Machine-readable error code"
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          description: "Human-readable error description"
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+        correlationId:
+          type: string
+          description: "Request correlation ID for log tracing"
+
+    # Request schemas
+    AuthorizationRequest:
+      type: object
+      required: [maskedPan, amount, currency, merchantId, merchantCategoryCode, terminalId, correlationId]
+      properties:
+        maskedPan:
+          type: string
+          pattern: "^XXXX-XXXX-XXXX-[0-9]{4}$"
+          description: "Masked PAN — last 4 digits only. Full PAN must never appear in API requests."
+          example: "XXXX-XXXX-XXXX-1234"
+        amount:
+          type: integer
+          format: int64
+          minimum: 1
+          description: "Transaction amount in minor currency units (cents). $10.50 = 1050."
+          example: 5000
+        currency:
+          type: string
+          pattern: "^[A-Z]{3}$"
+          description: "ISO 4217 three-letter currency code"
+          example: "ZAR"
+        merchantId:
+          type: string
+          maxLength: 15
+          example: "MCH-0012345"
+        merchantCategoryCode:
+          type: string
+          pattern: "^[0-9]{4}$"
+          description: "ISO 18245 Merchant Category Code"
+          example: "5411"
+        terminalId:
+          type: string
+          maxLength: 8
+          example: "TRM-00987"
+        correlationId:
+          type: string
+          maxLength: 64
+          description: "Caller-provided correlation ID for end-to-end tracing"
+          example: "txn-2026-04-24-001"
+
+    # Response schemas
+    AuthorizationResponse:
+      type: object
+      required: [authorizationId, responseCode, responseDescription, maskedPan, amount, currency, decidedAt]
+      properties:
+        authorizationId:
+          type: string
+          description: "Unique, immutable authorization identifier. Use this as the audit reference."
+          example: "AUTH-2026-04-24-00001"
+        responseCode:
+          type: string
+          description: "ISO 8583 DE 39 response code"
+          enum: ["00","01","05","12","14","51","54","57","58","61","62","65","91","96"]
+          example: "00"
+        responseDescription:
+          type: string
+          description: "Human-readable description of the response code"
+          example: "Approved"
+        maskedPan:
+          type: string
+          pattern: "^XXXX-XXXX-XXXX-[0-9]{4}$"
+          example: "XXXX-XXXX-XXXX-1234"
+        amount:
+          type: integer
+          format: int64
+          description: "Authorized amount in minor currency units"
+          example: 5000
+        currency:
+          type: string
+          example: "ZAR"
+        decidedAt:
+          type: string
+          format: date-time
+          description: "UTC timestamp of the authorization decision. Always UTC."
+          example: "2026-04-24T10:15:30Z"
+
+    CardLimits:
+      type: object
+      properties:
+        maskedPan:
+          type: string
+          example: "XXXX-XXXX-XXXX-1234"
+        dailyLimitAmount:
+          type: integer
+          format: int64
+          description: "Daily spend limit in minor units"
+          example: 500000
+        dailySpentAmount:
+          type: integer
+          format: int64
+          description: "Amount spent today in minor units"
+          example: 125000
+        dailyRemainingAmount:
+          type: integer
+          format: int64
+          description: "Remaining daily allowance in minor units"
+          example: 375000
+        transactionLimit:
+          type: integer
+          format: int64
+          description: "Per-transaction limit in minor units"
+          example: 100000
+        currency:
+          type: string
+          example: "ZAR"
+        limitResetAt:
+          type: string
+          format: date-time
+          description: "UTC timestamp when daily limits reset (always 00:00 UTC)"
+          example: "2026-04-25T00:00:00Z"
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [UP, DOWN, OUT_OF_SERVICE]
+          example: "UP"
+        components:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              status:
+                type: string
+              details:
+                type: object
+
+# =============================================================================
+# FORGE NOTES
+# =============================================================================
+# This spec is generated/maintained with FORGE /generate-openapi-spec
+# It is the source of truth for:
+#   - Consumer team integration (share this file, not the code)
+#   - Java stub generation (openapi-generator-cli)
+#   - Contract testing (Pact consumer tests generated from this spec)
+#   - API gateway configuration
+#
+# Changes to this spec require:
+#   - An ADR if the change is breaking (remove field, change type, remove endpoint)
+#   - Consumer team review for any change that affects the request/response shape
+#   - Version bump in info.version for any breaking change
+#
+# Business Rules covered by this spec:
+#   - Amount in minor units (BR-INT-001): enforced by integer type + description
+#   - PAN masking (SG-4): enforced by pattern + description on maskedPan fields
+#   - UTC timestamps (BR-INT-002): enforced by format: date-time + descriptions
+#   - Immutable authorization (BR-AUTH-010): enforced by absence of PUT/PATCH/DELETE
+# =============================================================================

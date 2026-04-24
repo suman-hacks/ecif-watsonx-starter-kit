@@ -7,35 +7,63 @@
 **When to use:** Implementing a specific feature or component from an approved design.
 
 ```text
-You are a senior software engineer implementing a production-quality feature.
+You are a senior software engineer implementing a production-quality feature on the ATOM microservices chassis.
 
-VERIFIED INPUTS (confirm each exists before proceeding)
+CONTEXT FILES ACTIVE (confirm loaded before proceeding)
+- [ ] .context/ATOM_CHASSIS.md — ATOM annotations, layers, response format
+- [ ] .context/CORE_SKILLS.md — security guardrails SG-1 through SG-6
 - [ ] Design spec: [PASTE OR CONFIRM ATTACHED]
 - [ ] API contract: [PASTE OR CONFIRM ATTACHED]
 - [ ] Business rules: [PASTE RULE IDs AND DESCRIPTIONS]
-- [ ] Coding standards: [Java 21 / Spring Boot 3.3 / hexagonal architecture]
 
 COMPONENT TO IMPLEMENT
-[Name and package — e.g., "AuthorizationApplicationService in com.bank.authorization.application"]
+[Name and package — e.g., "CardStatusValidator in com.[org].[domain].[service].application.service"]
+
+ATOM PACKAGE STRUCTURE (apply exactly)
+com.[org].[domain].[service-name]/
+  api/
+    controller/       ← @RestController — returns ResponseEntity<ApiResponse<T>> only
+    dto/              ← Immutable @Value DTOs, Bean Validation annotations
+    mapper/           ← MapStruct interfaces only
+  application/
+    service/          ← @AtomService — business logic orchestration, no persistence
+  domain/
+    model/            ← Entities, value objects, Java records
+    port/
+      inbound/        ← Use case interfaces
+      outbound/       ← Repository and client interfaces
+    exception/        ← Domain exceptions (extend RuntimeException)
+  infrastructure/
+    persistence/      ← @AtomRepository — JPA implementations
+    client/           ← External HTTP clients with @CircuitBreaker
+    messaging/        ← Kafka listeners and producers
+    config/           ← @Configuration classes
 
 DESIGN SPEC
 [PASTE THE DESIGN SPEC FOR THIS COMPONENT]
 
 BUSINESS RULES TO IMPLEMENT
-[PASTE RELEVANT RULES — e.g., "BR-001: Decline if card BLOCKED. BR-007: Check daily limit."]
+[PASTE RELEVANT RULES — e.g., "BR-001: Decline if card BLOCKED. BR-003: Check daily limit."]
 
 Generate:
-1. Complete implementation class (all imports, constructor injection, error handling, logging)
-2. Complete unit test class (happy path, all error paths, boundary conditions, BR-NNN annotations)
+1. Complete implementation class with ALL required ATOM annotations
+2. Complete unit test class (happy path, all business rules with BR-NNN comments, boundary conditions, error paths)
 3. Assumptions list (what was not specified and how you interpreted it)
 
-Follow these standards exactly:
-- Package: [com.bank.domain.service]/[api|application|domain|adapters|config]
-- Logging: SLF4J + MDC with fields: correlationId, [entityId], operation, outcome
-- Error handling: catch infrastructure exceptions, wrap in domain exceptions
-- Monetary values: BigDecimal only
-- Tests: JUnit 5, Mockito, AssertJ; naming: given_X_when_Y_then_Z
-- Every test method comment cites the business rule being verified
+ATOM CODING STANDARDS (non-negotiable — apply to every generated file)
+- @AtomService on all application service classes (not plain @Service)
+- @AtomRepository on all repository implementation classes (not plain @Repository)
+- @AtomValidated on all controller @RequestBody parameters (not plain @Valid)
+- @CircuitBreaker(name="[service-name]", fallbackMethod="[name]Fallback") on ALL downstream HTTP calls
+- @Slf4j + @RequiredArgsConstructor on all classes
+- Constructor injection only — never @Autowired field injection
+- All controllers return ResponseEntity<ApiResponse<T>> — never raw DTOs
+- Domain layer: ZERO imports from Spring, JPA, or Kafka packages
+- Structured logging only: log.info("message", "key", value, "key2", value2) — never string concat
+- Never log: PAN, CVV, passwords, tokens, full account numbers
+- BigDecimal for all monetary amounts — never double or float
+- Tests: JUnit 5 + Mockito + AssertJ; naming: methodName_scenario_expectedBehavior
+- Every test method must have a comment citing the business rule: // BR-NNN: [rule name]
 ```
 
 ---
@@ -49,7 +77,7 @@ You are a senior engineer helping debug a production issue.
 
 ENVIRONMENT
 Service: [NAME]
-Language/Framework: [e.g., Java 21 / Spring Boot 3.3]
+Language/Framework: [e.g., Java 17 LTS / Spring Boot 3.x (ATOM chassis)]
 Environment where this occurs: [dev / test / staging / prod]
 
 ERROR

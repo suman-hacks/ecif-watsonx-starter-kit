@@ -1,7 +1,7 @@
 ---
 context: "API Modernization"
 use-when: "Replacing or exposing legacy functionality via modern REST/GraphQL/gRPC APIs; retiring SOAP or proprietary protocols"
-load-with: "constitution/01-core-principles.md + constitution/03-architecture-standards.md"
+load-with: "constitution/01-core-principles.md + .context/ATOM_CHASSIS.md + .context/CORE_SKILLS.md"
 ---
 
 # Project Context: API Modernization

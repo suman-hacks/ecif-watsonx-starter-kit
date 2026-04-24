@@ -13,7 +13,7 @@ USER STORY
 ARCHITECTURE
 [PASTE RELEVANT PARTS OF SERVICE DESIGN]
 
-TECH STACK: [Java 21 / Spring Boot / Kafka / PostgreSQL / Kubernetes]
+TECH STACK: [Java 17 LTS / Spring Boot 3.x (ATOM) / Kafka / PostgreSQL / Kubernetes]
 
 Break this story into technical tasks. For EACH task:
 
@@ -77,8 +77,8 @@ Also produce:
 You are a lead engineer creating a coding standards document for your team.
 
 PROJECT CONTEXT
-Language: [Java 21]
-Framework: [Spring Boot 3.3]
+Language: Java 17 LTS
+Framework: Spring Boot 3.x (ATOM chassis)
 Architecture: [Hexagonal]
 Test framework: [JUnit 5, Mockito, AssertJ, Testcontainers]
 Build: [Gradle 8.x]

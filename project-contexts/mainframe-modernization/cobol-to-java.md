@@ -1,6 +1,6 @@
 # FORGE Project Context: COBOL to Java/Spring Modernization
 
-Load alongside `constitution/01-core-principles.md` and `knowledge-packs/legacy-cobol/README.md`.
+Load alongside `constitution/01-core-principles.md`, `.context/COBOL_READING_GUIDE.md`, and `.context/ATOM_CHASSIS.md`.
 
 ---
 

@@ -1,218 +1,311 @@
-# FORGE Tool Setup — AI Tool Selection and Configuration Guide
+# FORGE Tool Setup — AI Tool Selection and IDE Integration Guide
 
-This guide helps you choose the right AI coding tool (or combination of tools) for your project and points you to the configuration setup for each.
-
----
-
-## Tool Selection Guide
-
-No single AI tool is optimal for every task. FORGE is designed to let you use the best tool for each job. Use this guide to decide which tool to configure first, and whether a multi-tool strategy is right for your project.
-
-### GitHub Copilot
-
-**Best for**: Day-to-day inline code completion and Copilot Chat for developers writing code in their IDE. Works across virtually all programming languages and frameworks. The most widely deployed enterprise AI coding assistant.
-
-**When to choose it**:
-- Your team is already licensed for GitHub Copilot Enterprise or Business
-- You want seamless IDE-integrated code suggestions as you type
-- Your primary use case is code completion, docstring generation, and unit test scaffolding
-- You want a tool that works without switching context
-
-**When it is not enough on its own**:
-- Deep multi-file analysis or full-codebase reasoning (Claude Code is better)
-- COBOL/PL1/z/OS work (watsonx Code Assist for Z is purpose-built)
-- AWS-specific service integration guidance (AWS Q Developer is better)
-- Large-batch programmatic analysis (IBM watsonx.ai API is better)
-
-**Configuration file**: `.github/copilot-instructions.md` in your project repo
-**Setup**: `tool-setup/github-copilot/copilot-instructions.md`
+> Choose your AI tool(s), configure FORGE guardrails and ATOM patterns, and start generating production-ready code.
 
 ---
 
-### Claude Code
+## Quickest Path: Pick Your IDE
 
-**Best for**: Complex multi-file analysis, architecture discussions, legacy code understanding, agentic task execution (reading many files, writing many files, running tests), and nuanced reasoning about design trade-offs. Excellent for mainframe-to-Java translation logic because it can hold large context windows and reason about complex business rules.
-
-**When to choose it**:
-- You need the AI to read and reason about 10–50+ files simultaneously
-- You are working through complex architecture or design decisions that require extended reasoning
-- You want to run agentic workflows: `analyze this legacy COBOL, extract business rules, generate Java equivalents, write tests`
-- You need an AI coding assistant accessible from the command line or in a CI pipeline
-- You want an AI that can explain its reasoning and ask clarifying questions before generating code
-
-**When it is not enough on its own**:
-- Inline IDE code completion (GitHub Copilot is better for this)
-- COBOL-specific syntax analysis and copybook resolution (watsonx Code Assist for Z is purpose-built)
-- AWS-specific SDK and service documentation awareness (AWS Q Developer is better)
-
-**Configuration file**: `CLAUDE.md` in your project repo root
-**Setup**: `tool-setup/claude-code/CLAUDE.md`
+| My IDE | My AI Tool | Start Here |
+|---|---|---|
+| **VS Code** | Claude Code | [Option 1](#option-1-vs-code--claude-code) |
+| **VS Code** | GitHub Copilot | [Option 2](#option-2-vs-code--github-copilot) |
+| **VS Code** | Both (recommended) | [Options 1+2 together](#using-claude-code--copilot-together) |
+| **IntelliJ IDEA** | JetBrains AI | [Option 3](#option-3-intellij--jetbrains-ai-assistant) |
+| **IntelliJ IDEA** | GitHub Copilot | [Option 4](#option-4-intellij--github-copilot-plugin) |
+| **IntelliJ IDEA** | Claude Code (terminal) | [Option 5](#option-5-any-ide--claude-code-terminal) |
+| **Any IDE** | Claude Code (terminal) | [Option 5](#option-5-any-ide--claude-code-terminal) |
+| **Cursor** | Cursor built-in | [Option 6](#option-6-cursor) |
+| **No IDE (browser)** | Claude.ai / watsonx | [Web Portal](#option-7-web-portal-no-ide-required) |
 
 ---
 
-### watsonx Code Assist for Z
+## How Every Option Works
 
-**Best for**: COBOL, PL/1, JCL, REXX, and Assembler analysis on z/OS. IBM's purpose-built AI trained on mainframe codebases. Understands copybooks, CICS commands, IMS DB/DC constructs, file section layouts, and z/OS system calls. Indispensable for any mainframe modernization project.
-
-**When to choose it**:
-- Your source code is COBOL, PL/1, Assembler, REXX, or JCL
-- You need accurate analysis of CICS and IMS constructs
-- You want AI assistance directly in VS Code or Eclipse while connected to z/OS
-- You are extracting business rules from legacy mainframe programs
-
-**When it is not enough on its own**:
-- Generating the target-state Java, Python, or Go code (pair with Copilot or Claude Code)
-- Cloud migration guidance (pair with AWS Q Developer)
-- Architecture-level design and ADR generation (pair with Claude Code)
-
-**Configuration**: See `tool-setup/watsonx-code-assist/for-z-mainframe/setup-guide.md`
-
----
-
-### IBM watsonx.ai / BAM
-
-**Best for**: Large-batch programmatic analysis, fine-tuned enterprise models, REST API-based prompt execution, and organizations requiring IBM-hosted AI with enterprise data residency guarantees.
-
-**When to choose it**:
-- You need to analyze hundreds of COBOL programs or Java classes in batch (via API)
-- Your organization requires IBM-governed AI with specific data residency (US, EU, APAC)
-- You want to fine-tune a model on your organization's proprietary code and documentation
-- You are building an automated pipeline that calls an AI API programmatically
-
-**When it is not enough on its own**:
-- Interactive IDE assistance (use Copilot or Claude Code instead)
-- Real-time code completion in an IDE
-- COBOL-specific syntax understanding (watsonx Code Assist for Z is better)
-
-**Configuration**: See `tool-setup/watsonx-code-assist/for-distributed/setup-guide.md`
-
----
-
-### Cursor
-
-**Best for**: Greenfield development where full-file and multi-file AI editing is the primary workflow. Cursor's Composer mode can generate or heavily refactor entire files based on natural language instructions, making it excellent for scaffolding new services from scratch.
-
-**When to choose it**:
-- Your project is greenfield and you want AI to generate boilerplate, scaffolding, and initial implementations
-- You want to make sweeping multi-file changes guided by AI (e.g., rename a domain concept across 20 files)
-- You are comfortable with an AI-native editor (as opposed to a plugin in VS Code/IntelliJ)
-- You want AI-assisted refactoring across an entire codebase
-
-**When it is not enough on its own**:
-- COBOL/mainframe work (watsonx Code Assist for Z is required)
-- AWS-specific guidance (AWS Q Developer is better)
-- Complex agentic analysis pipelines (Claude Code is better)
-
-**Configuration file**: `.cursorrules` in your project repo root
-**Setup**: `tool-setup/cursor/cursorrules.md`
-
----
-
-### AWS Q Developer
-
-**Best for**: AWS-native workloads, cloud migration to AWS, and engineering teams deeply embedded in the AWS ecosystem. Q Developer has deep awareness of AWS services, SDKs, CloudFormation, CDK, and AWS best practices. It can also scan code for security vulnerabilities and suggest IAM policy fixes.
-
-**When to choose it**:
-- Your target platform is AWS (ECS, EKS, Lambda, RDS, etc.)
-- You are migrating applications from on-premises or another cloud to AWS
-- You want AI assistance with CloudFormation, CDK, or Terraform for AWS resources
-- You want AI-powered security scanning aware of AWS IAM and service-specific risks
-- Your organization is standardized on AWS tooling
-
-**When it is not enough on its own**:
-- Non-AWS cloud targets (Azure, GCP, IBM Cloud — other tools are better)
-- COBOL/mainframe work (watsonx Code Assist for Z is required)
-- Complex multi-file reasoning and architecture discussions (Claude Code is better)
-
-**Configuration**: See `tool-setup/aws-q-developer/setup-guide.md`
-
----
-
-## Configuration Quick Reference
-
-| Tool | Config File Location | Format | Approx. Size Limit | Auto-loaded? |
-|---|---|---|---|---|
-| GitHub Copilot | `.github/copilot-instructions.md` in repo | Markdown | ~8,000 characters | Yes, in IDE |
-| Claude Code | `CLAUDE.md` in repo root | Markdown | No hard limit (recommend < 4,000 tokens) | Yes, on `claude` launch |
-| Cursor | `.cursorrules` in repo root | Plain text or Markdown | ~10,000 characters | Yes, on project open |
-| watsonx Code Assist for Z | VS Code settings + system prompt | JSON + text | Varies by version | Partially (settings file auto-loaded; session context must be pasted) |
-| IBM watsonx.ai / BAM | API `system_prompt` parameter | Text | Model-dependent (typically 4K–8K tokens) | No — must be passed each API call |
-| AWS Q Developer | Workspace instructions in IDE settings | Text | ~4,000 characters | Yes, in IDE |
-| JetBrains AI | IDE settings panel | Text | ~4,000 characters | Yes, in IDE |
-
----
-
-## Multi-Tool Strategy
-
-For complex enterprise projects — especially mainframe modernization — using a single AI tool is rarely optimal. FORGE is designed to support coordinated multi-tool workflows where each tool handles the tasks it is best suited for.
-
-### Pattern 1: Mainframe Modernization Stack
-
-This is the recommended tool combination for COBOL/PL1-to-Java modernization projects.
+Regardless of which tool you choose, the setup follows the same pattern:
 
 ```
-watsonx Code Assist for Z          → COBOL/PL1 analysis, business rule extraction
-         ↓ (outputs: extracted rules, data models, flow diagrams)
-Claude Code                         → Architecture design, Java package design, ADR generation
-         ↓ (outputs: Java class skeletons, design specifications)
-GitHub Copilot                      → Java implementation, unit test generation, Spring Boot wiring
-         ↓ (outputs: production-ready Java code with tests)
-Claude Code (review)                → Multi-file code review, architectural conformance check
+Step 1: Copy .context/ into your project repo
+Step 2: Copy the tool-specific config file into your project repo
+Step 3: Fill in [USER FILLS] sections with your project details
+Step 4: Commit both files to git (whole team benefits automatically)
+Step 5: Open your IDE/tool — context is loaded automatically
 ```
 
-**How to coordinate**:
-1. Use watsonx Code Assist for Z in VS Code connected to z/OS to analyze each COBOL program. Export your findings (business rules, data structures, flow) to a structured document.
-2. Load that document into a Claude Code session along with your target architecture spec. Generate the Java design and ADRs.
-3. Use GitHub Copilot in your Java IDE to assist with the actual implementation, referencing the Claude-generated design.
-4. Use a final Claude Code session to review the completed module for architectural conformance and completeness.
+The `.context/` folder is the core — it teaches any AI tool about ATOM patterns, security guardrails, and migration rules. The tool-specific config file (CLAUDE.md, copilot-instructions.md, .cursorrules) is the delivery mechanism.
 
 ---
 
-### Pattern 2: Cloud Migration Stack
+## Option 1: VS Code + Claude Code
 
-Recommended for lift-and-shift or re-architecture to AWS.
+**Best for:** Deep codebase analysis, multi-file generation, FORGE Skills (/analyze-legacy, /generate-service, etc.)
 
+**What you get:**
+- FORGE slash commands that trigger structured workflows
+- Automatic CLAUDE.md loading with ATOM patterns
+- Multi-file analysis and generation
+- Full project context awareness
+
+**Setup:**
+```bash
+# 1. Install Claude Code
+npm install -g @anthropic-ai/claude-code
+# or install "Claude Code" VS Code extension by Anthropic
+
+# 2. Copy FORGE config to project root
+cp /path/to/forge/tool-setup/claude-code/CLAUDE.md ./CLAUDE.md
+cp -r /path/to/forge/.context ./
+
+# 3. Fill in [USER FILLS] sections in CLAUDE.md
+code CLAUDE.md
+
+# 4. Commit both files
+git add CLAUDE.md .context/ .github/
+git commit -m "Add FORGE AI engineering configuration"
+
+# 5. Start Claude Code from project root
+claude
 ```
-Claude Code                         → Current-state assessment, dependency mapping, risk analysis
-         ↓ (outputs: migration inventory, risk register, ADRs)
-AWS Q Developer                     → AWS target-state design, CDK/Terraform scaffolding, service selection
-         ↓ (outputs: infrastructure code, AWS architecture)
-GitHub Copilot                      → Application code adaptation, SDK integration
-         ↓ (outputs: cloud-adapted application code)
-AWS Q Developer (security scan)     → IAM policy review, security finding remediation
-```
+
+**Verify:** Type: `Summarize the FORGE constitution rules you are operating under.`
+
+**Config file:** [claude-code/CLAUDE.md](claude-code/CLAUDE.md)
+**Skills catalog:** [claude-code/SKILLS.md](claude-code/SKILLS.md)
 
 ---
 
-### Pattern 3: Greenfield API Development Stack
+## Option 2: VS Code + GitHub Copilot
 
-Recommended for building new services from scratch.
+**Best for:** Inline code completions and Copilot Chat while editing in VS Code.
 
+**What you get:**
+- Inline suggestions that follow ATOM patterns
+- Copilot Chat with FORGE rules pre-loaded
+- `#file:` references to `.context/` files for targeted generation
+
+**Setup:**
+```bash
+# 1. Install GitHub Copilot extension in VS Code
+# Extensions → search "GitHub Copilot" → Install
+
+# 2. Copy FORGE config to project
+mkdir -p .github
+cp /path/to/forge/tool-setup/github-copilot/copilot-instructions.md \
+   .github/copilot-instructions.md
+cp -r /path/to/forge/.context ./
+
+# 3. Fill in [USER FILLS] sections
+code .github/copilot-instructions.md
+
+# 4. Commit
+git add .github/ .context/
+git commit -m "Add FORGE Copilot configuration"
 ```
-Claude Code                         → System design, API contract design (OpenAPI), ADRs
-         ↓ (outputs: OpenAPI specs, architecture design, domain model)
-Cursor                              → Scaffold project from spec, generate service boilerplate
-         ↓ (outputs: full project structure, initial implementation)
-GitHub Copilot                      → Complete implementation, add unit tests, wire integrations
-         ↓ (outputs: production-ready code with full test coverage)
-Claude Code (review)                → Final review for security, design conformance, test coverage
+
+**Using in Copilot Chat (VS Code):**
 ```
+# Reference context files in your request:
+Using #file:.context/ATOM_CHASSIS.md, generate a new @AtomService for payment limits.
+
+# Check what rules are loaded:
+@workspace What FORGE rules are you following for this project?
+```
+
+**Verify:** Open Copilot Chat → ask: `What ATOM annotations must I use for a service class?`
+
+**Agent Mode:** For autonomous multi-file code generation (FORGE Stage 3), switch to Agent Mode in the Copilot Chat panel. See [github-copilot/setup-guide.md](github-copilot/setup-guide.md) for the full Agent Mode + Copilot Workspace guide.
+
+**Config file:** [github-copilot/copilot-instructions.md](github-copilot/copilot-instructions.md) | **Full guide:** [github-copilot/setup-guide.md](github-copilot/setup-guide.md)
 
 ---
 
-### Avoiding Tool Conflicts
+## Using Claude Code + Copilot Together
 
-When using multiple tools on the same project, ensure consistency by:
+This is the recommended setup for most VS Code engineers on ATOM projects:
 
-1. **Single source of truth for project rules**: Maintain one master context document (e.g., `docs/project-context.md`) that all tool configs reference. Keep it updated.
-2. **Shared naming conventions**: If Claude Code and Copilot both generate code for the same project, they must follow the same naming conventions. Put conventions in all tool config files.
-3. **Consistent constitution**: Embed the FORGE Constitution rules in every tool's config file. Do not let one tool operate without the guardrails.
-4. **Output staging**: Never directly merge AI output from one tool into code that another tool will analyze without human review. Use review gates (`guardrails/review-gates.md`) between tool handoffs.
+```
+VS Code
+├── Claude Code extension (or run `claude` in integrated terminal)
+│   → Complex analysis, legacy discovery, full service generation
+│   → FORGE Skills: /analyze-legacy, /generate-service, /review-code
+└── GitHub Copilot extension
+    → Inline completion while typing
+    → Quick questions in Copilot Chat
+    → #file: references for targeted context
+```
+
+Both tools read from the same `.context/` files and respect the same FORGE rules. There is no conflict.
 
 ---
 
-## Getting Help
+## Option 3: IntelliJ + JetBrains AI Assistant
 
-- For tool-specific issues: see the individual setup guide in the relevant subdirectory.
-- For prompt issues: see `sdlc/` for stage-specific prompts and `personas/` for role-specific prompts.
-- For governance and compliance questions: see `guardrails/` and `constitution/`.
+**Best for:** Java engineers using IntelliJ IDEA who have a JetBrains AI subscription.
+
+**What you get:**
+- Native IntelliJ AI integration
+- Code completion with FORGE + ATOM guardrails
+- AI chat panel in the IDE
+
+**Setup:**
+```
+1. Install: File → Settings → Plugins → search "AI Assistant" → Install
+2. Configure system prompt: AI Assistant panel → ⚙ → Modify AI Instructions
+   (Paste the FORGE + ATOM system prompt from the JetBrains setup guide)
+3. Copy .context/ into your project root
+4. At the start of each session: paste .context/ATOM_CHASSIS.md into the chat
+```
+
+**Full guide:** [jetbrains-ai/setup-guide.md](jetbrains-ai/setup-guide.md)
+
+---
+
+## Option 4: IntelliJ + GitHub Copilot Plugin
+
+**Best for:** IntelliJ engineers with GitHub Copilot licenses.
+
+**Setup:**
+```
+1. Install: File → Settings → Plugins → search "GitHub Copilot" → Install
+2. Copy .github/copilot-instructions.md (FORGE template) into your project
+3. The plugin reads it automatically — no further setup needed
+```
+
+**Full guide:** [jetbrains-ai/setup-guide.md](jetbrains-ai/setup-guide.md)
+
+---
+
+## Option 5: Any IDE + Claude Code (Terminal)
+
+**Best for:** Engineers using IntelliJ, PyCharm, WebStorm, or any other IDE who want FORGE Skills.
+
+Claude Code runs in the terminal alongside any IDE — no editor integration needed.
+
+```bash
+# In a terminal, from your project root:
+claude
+
+# Available FORGE Skills:
+/analyze-legacy    # Analyze COBOL/legacy code
+/generate-service  # Generate complete ATOM service + tests
+/review-code       # Review code against FORGE + ATOM standards
+/create-tests      # Generate JUnit 5 + Testcontainers test suite
+/map-data          # COBOL → Java domain model mapping
+/create-adr        # Generate Architecture Decision Record
+```
+
+**Workflow:** Run Claude Code in a terminal split-screen alongside your IDE. Claude generates files; your IDE is used for browsing, running tests, and debugging.
+
+**Config file:** [claude-code/CLAUDE.md](claude-code/CLAUDE.md)
+**Skills catalog:** [claude-code/SKILLS.md](claude-code/SKILLS.md)
+
+---
+
+## Option 6: Cursor
+
+**Best for:** Engineers who use Cursor as their primary IDE.
+
+**Setup:**
+```bash
+# Install Cursor from https://cursor.sh
+
+# Copy FORGE config
+cp /path/to/forge/tool-setup/cursor/cursorrules.md .cursorrules
+cp -r /path/to/forge/.context ./
+
+# Fill in [USER FILLS] sections
+open .cursorrules
+
+# In Cursor Composer (Cmd+I):
+@.context/ATOM_CHASSIS.md Generate a new ATOM service for fraud scoring.
+```
+
+**Config file:** [cursor/cursorrules.md](cursor/cursorrules.md)
+
+---
+
+## Option 7: Web Portal (No IDE Required)
+
+**Best for:** Product managers, business analysts, workshop facilitators, and non-IDE users.
+
+```bash
+open /path/to/forge/web-ui/index.html
+```
+
+Or deploy to GitHub Pages for team-wide access — see [web-ui/README.md](../web-ui/README.md).
+
+The portal provides all FORGE prompts organized by persona and SDLC stage, with one-click copy to paste into any web-based AI tool (Claude.ai, ChatGPT, watsonx Prompt Lab).
+
+---
+
+## IBM watsonx Code Assist
+
+**For distributed (Java/Spring Boot) projects:**
+
+```
+1. Install: VS Code → Extensions → search "IBM watsonx Code Assist" → Install
+2. Open extension settings → "Custom Instructions"
+3. Paste content from .context/CORE_SKILLS.md + .context/ATOM_CHASSIS.md
+4. For each prompt, begin with: "Apply the FORGE and ATOM standards I provided."
+```
+
+**For mainframe (COBOL/z/OS) projects:**
+Full guide: [watsonx-code-assist/for-z-mainframe/setup-guide.md](watsonx-code-assist/for-z-mainframe/setup-guide.md)
+
+---
+
+## AWS Q Developer
+
+**Setup:**
+```
+1. Install: VS Code/IntelliJ → Extensions → search "AWS Q Developer"
+2. Authenticate with AWS Builder ID or IAM Identity Center
+3. In Q Chat, paste .context/CORE_SKILLS.md as the opening message
+4. Load cloud migration context from project-contexts/cloud-migration/
+```
+
+**Config guide:** [aws-q-developer/setup-guide.md](aws-q-developer/setup-guide.md)
+
+---
+
+## Tool Capability Comparison
+
+| Capability | Claude Code | GitHub Copilot | JetBrains AI | Cursor | watsonx |
+|---|---|---|---|---|---|
+| FORGE slash commands (`/analyze-legacy`) | ✅ Native | ❌ | ❌ | ❌ | ❌ |
+| Auto-loads CLAUDE.md / instructions file | ✅ | ✅ | ⚠️ Manual | ✅ | ⚠️ Manual |
+| Full repo context | ✅ | ✅ (@workspace) | ⚠️ Limited | ✅ (@codebase) | ⚠️ Limited |
+| COBOL/z/OS analysis | ✅ | ⚠️ Limited | ❌ | ⚠️ Limited | ✅ (watsonx Z) |
+| Multi-file generation | ✅ | ⚠️ Limited | ⚠️ Limited | ✅ | ❌ |
+| In-IDE inline completion | ✅ (VS Code) | ✅ | ✅ | ✅ | ✅ |
+| Enterprise security/air-gap | ⚠️ Check | ⚠️ Check | ⚠️ Check | ⚠️ Check | ✅ IBM |
+
+---
+
+## Files Required in Your Project Repository
+
+After setup, your project repo should have:
+
+```
+your-project/
+├── .context/                    ← From FORGE (copy entire folder)
+│   ├── CORE_SKILLS.md
+│   ├── ATOM_CHASSIS.md
+│   ├── MODERNIZATION.md        ← Add if migrating from legacy
+│   ├── COBOL_READING_GUIDE.md  ← Add if working with COBOL
+│   └── PAYMENTS_DOMAIN.md      ← Add if working with payments/cards
+├── CLAUDE.md                   ← If using Claude Code
+├── .mcp.json                   ← If using MCP servers with Claude Code (see mcp-servers/)
+├── .github/
+│   └── copilot-instructions.md ← If using GitHub Copilot
+└── .cursorrules                ← If using Cursor
+```
+
+**Commit all of these files.** The whole team gets the same AI behavior automatically.
+
+> **MCP Servers (Claude Code):** Connect Claude Code directly to Jira, Confluence, GitHub, and your database. See [mcp-servers/setup-guide.md](mcp-servers/setup-guide.md) — this is the highest-leverage setup for teams doing modernization work.
+
+---
+
+*FORGE v2.0 — Tool Setup Guide*
+*For detailed guides: see the subdirectory for your specific tool.*

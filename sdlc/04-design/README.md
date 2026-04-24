@@ -42,7 +42,7 @@ output: "Detailed design specs, data models, sequence diagrams — ready for dev
 
 ```
 1. Load constitution/01-core-principles.md
-2. Load constitution/03-architecture-standards.md
+2. Load .context/ATOM_CHASSIS.md (ATOM architecture standards)
 3. Load project-contexts/[your context]/context.md
 4. Reference approved service-map from Stage 03
 5. Reference business-rules-register.md from Stage 02

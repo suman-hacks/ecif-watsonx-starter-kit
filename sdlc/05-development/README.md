@@ -10,7 +10,7 @@
 - Approved service design (from Stage 03/04)
 - Business rules register
 - API contracts
-- Coding standards (from `constitution/04-code-quality.md` and team standards)
+- Coding standards (from `.context/CORE_SKILLS.md` and `.context/ATOM_CHASSIS.md`)
 
 **Outputs produced:**
 - Implementation code with tests

@@ -1,275 +1,402 @@
-# FORGE Quick Start Guide
+# FORGE Quick Start — 5 Steps to Your AI Engineering Environment
 
-> Get your AI engineering environment configured in 5 minutes.
-
----
-
-## Prerequisites
-
-Before you begin, confirm you have the following:
-
-- [ ] A git repository for your project (local or hosted on GitHub/GitLab/Bitbucket)
-- [ ] At least one supported AI coding tool installed and licensed (see Step 1)
-- [ ] A basic understanding of your project type (greenfield, brownfield, mainframe, cloud migration)
-- [ ] Read access to any legacy source code or architecture documentation you plan to modernize
-- [ ] Familiarity with your team's target language and framework (Java/Spring, Python/FastAPI, Node.js, etc.)
-
-> **Security reminder**: Before you start, identify which data is classified in your organization. Never paste production database contents, customer records, PAN/CVV data, authentication credentials, or internal IP addresses into any AI tool. See `guardrails/prompt-boundary-policy.md` for the full policy.
+> Get FORGE configured and generating production-ready code in under 15 minutes.
 
 ---
 
-## Step 1: Choose Your AI Tool and Configure It
+## What You Need Before Starting
 
-You need at least one AI tool configured. If your team uses multiple tools (e.g., watsonx Code Assist for Z for COBOL analysis + GitHub Copilot for Java generation), configure each tool you plan to use.
-
-### GitHub Copilot
-
-**What it does**: Provides in-editor code completion and Copilot Chat using your project's custom instructions.
-
-**Setup**:
-1. Ensure GitHub Copilot is installed and active in VS Code, JetBrains, or your IDE.
-2. In your project repository, create the directory `.github/` if it does not exist.
-3. Copy the contents of `tool-setup/github-copilot/copilot-instructions.md` from this FORGE repository into a new file at `.github/copilot-instructions.md` in your project repository.
-4. Edit the `[USER FILLS]` sections: project name, tech stack, architectural patterns, key directories.
-5. Commit the file. GitHub Copilot will automatically pick up these instructions in your IDE.
-
-**Verification**: Open GitHub Copilot Chat in your IDE and ask: `What are the key rules you are operating under for this project?` — it should reflect your FORGE configuration.
+- [ ] A project repository (local or on GitHub/GitLab/Bitbucket)
+- [ ] At least one AI tool installed (see Step 2 for options)
+- [ ] Your project type identified: Greenfield | Brownfield | Mainframe Modernization | Cloud Migration | API Modernization
+- [ ] Basic knowledge of your target tech stack (Java 17+ / Spring Boot 3.x for ATOM projects)
 
 ---
 
-### Claude Code
+## Step 1: Copy the FORGE Context Engine Into Your Project
 
-**What it does**: Provides agentic AI coding assistance, multi-file analysis, architecture discussions, and complex code generation. Reads `CLAUDE.md` from your repo root automatically.
+The `.context/` folder is the core of FORGE. It tells any AI tool what your standards, ATOM patterns, and migration rules are.
 
-**Setup**:
-1. Install Claude Code CLI: follow instructions at `https://claude.ai/code`
-2. Copy `tool-setup/claude-code/CLAUDE.md` to the root of your project repository as `CLAUDE.md`.
-3. Edit the `[USER FILLS]` sections: project name, project type, tech stack, architectural patterns, repository structure, known constraints.
-4. Optionally add custom slash commands relevant to your project.
-5. Run `claude` from your project root — it will load `CLAUDE.md` automatically.
+```bash
+# From your project repository root:
+cp -r /path/to/forge/.context ./
 
-**Verification**: Run `claude` and ask: `Summarize the FORGE rules you are operating under.` — it should reflect your CLAUDE.md configuration.
+# Verify:
+ls .context/
+# CORE_SKILLS.md   ATOM_CHASSIS.md   MODERNIZATION.md   .aiconfig
+```
 
----
+**What each file does:**
 
-### watsonx Code Assist for Z (Mainframe)
+| File | Load it when... |
+|---|---|
+| `CORE_SKILLS.md` | Every session — universal security and quality guardrails |
+| `ATOM_CHASSIS.md` | Building or reviewing any ATOM microservice |
+| `MODERNIZATION.md` | Migrating COBOL/PL1/TIBCO to Java |
+| `COBOL_READING_GUIDE.md` | Analyzing or transforming COBOL source code |
+| `PAYMENTS_DOMAIN.md` | Any work involving card payments, ISO 8583, or PCI-DSS scope |
 
-**What it does**: IBM's purpose-built AI for COBOL, PL/1, JCL, REXX, and Assembler. Understands z/OS constructs, copybooks, and mainframe data types.
-
-**Setup**: Follow the detailed guide at `tool-setup/watsonx-code-assist/for-z-mainframe/setup-guide.md`.
-
-**Summary**:
-1. Install VS Code with IBM Z Open Editor extension.
-2. Configure your z/OS connection credentials.
-3. Load the FORGE mainframe context file from `project-contexts/mainframe-modernization/`.
-4. Use the COBOL analysis prompts from `personas/mainframe-engineer/`.
-
----
-
-### Cursor
-
-**What it does**: AI-native code editor with full-file editing, multi-file changes, and project-wide context. Reads `.cursorrules` from your repo root.
-
-**Setup**:
-1. Install Cursor from `https://cursor.sh`
-2. Open your project repository in Cursor.
-3. Copy the contents of `tool-setup/cursor/cursorrules.md` from this FORGE repository into a new file at `.cursorrules` in your project root.
-4. Edit the `[USER FILLS]` sections to reflect your project's language, framework, and conventions.
-5. Cursor automatically loads `.cursorrules` when you open the project.
-
-**Verification**: In Cursor Chat (Cmd/Ctrl+L), ask: `What coding conventions are you following for this project?`
+**These files are templates.** Open them and customize:
+- `ATOM_CHASSIS.md` → update with your organization's specific ATOM version, registry URL, and any custom annotations
+- `CORE_SKILLS.md` → add any org-specific security policies or naming conventions
 
 ---
 
-### AWS Q Developer
+## Step 2: Configure Your AI Tool
 
-**What it does**: AWS's AI coding assistant, optimized for AWS-native workloads, cloud migration, and AWS service integration.
-
-**Setup**: Follow the detailed guide at `tool-setup/aws-q-developer/setup-guide.md`.
-
-**Summary**:
-1. Install the AWS Q Developer extension for VS Code or JetBrains.
-2. Authenticate with your AWS Builder ID or IAM Identity Center.
-3. Load the cloud migration context from `project-contexts/cloud-migration/`.
-4. Use the infrastructure and migration prompts from `personas/cloud-engineer/`.
+Choose the tool(s) your team uses. You don't need all of them.
 
 ---
 
-### IBM watsonx.ai / BAM
+### Option A: Claude Code (VS Code or Terminal)
 
-**What it does**: REST API-based access to IBM foundation models. Best for batch analysis, fine-tuned enterprise models, and programmatic prompt execution.
+**Best for:** Agentic multi-file analysis, legacy code discovery, complex code generation.
 
-**Setup**: Follow the detailed guide at `tool-setup/watsonx-code-assist/for-distributed/setup-guide.md`.
+**Step-by-step:**
+
+1. Install Claude Code:
+   ```bash
+   npm install -g @anthropic-ai/claude-code
+   # or install the VS Code extension: "Claude Code" by Anthropic
+   ```
+
+2. Copy the CLAUDE.md template to your project root:
+   ```bash
+   cp /path/to/forge/tool-setup/claude-code/CLAUDE.md ./CLAUDE.md
+   ```
+
+3. Open `CLAUDE.md` and fill in every `[USER FILLS]` section:
+   - Project name and type
+   - Tech stack (Java version, Spring Boot version, database)
+   - Architectural patterns (package structure, dependency direction)
+   - Repository structure
+   - Domain vocabulary (avoid mixing business terms)
+
+4. Copy the Skills catalog to your tool-setup:
+   ```bash
+   cp /path/to/forge/tool-setup/claude-code/SKILLS.md ./tool-setup/claude-code/SKILLS.md
+   # Reference it from CLAUDE.md (already done in the template)
+   ```
+
+5. (Optional but recommended) Configure MCP servers to connect Claude Code to Jira, Confluence, and your database:
+   ```bash
+   # See tool-setup/mcp-servers/setup-guide.md for full configuration
+   # Minimum: copy .mcp.json template and add your API tokens
+   ```
+
+6. Start Claude Code from your project root:
+   ```bash
+   claude
+   ```
+
+7. Verify setup:
+   ```
+   Summarize the FORGE constitution rules you are operating under for this project.
+   ```
+   Claude should describe the 12 principles from `constitution/01-core-principles.md` and your project-specific rules from `CLAUDE.md`.
+
+8. Try your first FORGE skill:
+   ```
+   /analyze-legacy [paste a COBOL file or describe a legacy component]
+   ```
+
+**Commit `CLAUDE.md` and `.mcp.json` (without tokens) to your repository** so all team members get the same Claude behavior automatically.
 
 ---
 
-## Step 2: Identify Your Project Type
+### Option B: VS Code + GitHub Copilot (Chat + Agent Mode)
 
-Use this decision tree to select the right project context.
+**Best for:** Inline code completion, chat, and autonomous multi-file generation (Agent Mode). Works alongside Claude Code.
+
+**Step-by-step:**
+
+1. Install GitHub Copilot extension in VS Code (search `GitHub Copilot` in Extensions).
+
+2. Ensure you have a GitHub Copilot license active.
+
+3. Create the `.github/` directory in your project root (if it doesn't exist):
+   ```bash
+   mkdir -p .github
+   ```
+
+4. Copy the FORGE Copilot instructions:
+   ```bash
+   cp /path/to/forge/tool-setup/github-copilot/copilot-instructions.md .github/copilot-instructions.md
+   ```
+
+5. Edit `.github/copilot-instructions.md` — fill in:
+   - `## Project Identity` — project name, type, language, framework
+   - `## Architectural Patterns` — package structure, data access, error handling
+   - `## Domain Context` — business domain, key concepts, key business rules
+
+6. In VS Code Copilot Chat, reference context files:
+   ```
+   Using #file:.context/ATOM_CHASSIS.md, create a new service class for payment authorization.
+   ```
+
+7. For multi-file autonomous generation, switch to **Agent Mode** in the Copilot Chat dropdown (`Ask` → `Agent`). See [tool-setup/github-copilot/setup-guide.md](tool-setup/github-copilot/setup-guide.md) for Agent Mode and Copilot Workspace workflow.
+
+8. Verify:
+   ```
+   @workspace What FORGE rules are you operating under for this project?
+   ```
+
+**Commit `.github/copilot-instructions.md`** so every team member automatically gets the same Copilot behavior.
+
+---
+
+### Option C: IntelliJ IDEA / JetBrains AI Assistant
+
+**Best for:** Java development in IntelliJ IDEA. Full IDE integration for ATOM service generation.
+
+**Step-by-step:**
+
+1. Install the **JetBrains AI Assistant** plugin:
+   - IntelliJ IDEA: **File → Settings → Plugins** → search "AI Assistant" → Install
+   - Or: Install the **GitHub Copilot** plugin for IntelliJ
+
+2. Configure AI context (AI Assistant):
+   - Open **AI Assistant** panel (right sidebar)
+   - Click the **gear icon → Customize AI Assistant**
+   - Paste the contents of `.context/CORE_SKILLS.md` into the **System Prompt** field
+   - Add to the system prompt:
+     ```
+     Also apply the ATOM chassis patterns from .context/ATOM_CHASSIS.md.
+     ```
+
+3. Configure Copilot for IntelliJ (alternative):
+   - Install the GitHub Copilot plugin
+   - The `.github/copilot-instructions.md` file from Step B is read automatically
+   - In Copilot Chat, reference context with: `#file:.context/ATOM_CHASSIS.md`
+
+4. For Claude Code + IntelliJ (recommended setup):
+   - Install the **Claude Code** VS Code extension — OR —
+   - Run `claude` from the terminal in your project root alongside IntelliJ
+   - Use Claude Code in the terminal for complex analysis; IntelliJ AI for in-IDE completions
+
+5. Verify in the AI Assistant chat:
+   ```
+   I am working on an ATOM Spring Boot service. What architecture layers should I use
+   and what annotations are required? Reference .context/ATOM_CHASSIS.md.
+   ```
+
+See the full JetBrains setup guide: [tool-setup/jetbrains-ai/setup-guide.md](tool-setup/jetbrains-ai/setup-guide.md)
+
+---
+
+### Option D: Cursor
+
+**Best for:** Engineers who prefer Cursor as their primary IDE.
+
+**Step-by-step:**
+
+1. Install [Cursor](https://cursor.sh) and open your project.
+
+2. Copy the FORGE Cursor rules:
+   ```bash
+   cp /path/to/forge/tool-setup/cursor/cursorrules.md .cursorrules
+   ```
+
+3. Edit `.cursorrules` — fill in project-specific sections.
+
+4. In Cursor Composer (Cmd/Ctrl+I), reference context:
+   ```
+   @.context/ATOM_CHASSIS.md Generate a new ATOM service for fraud scoring.
+   ```
+
+5. Verify:
+   ```
+   What FORGE and ATOM rules are you applying to this project?
+   ```
+
+---
+
+### Option E: IBM watsonx Code Assist
+
+**Best for:** IBM-licensed shops, especially for COBOL/z/OS analysis with watsonx for Z.
+
+**For distributed (Java/Spring) projects:**
+1. Install the IBM watsonx Code Assist extension in VS Code
+2. Open extension settings → **Custom Instructions**
+3. Paste the contents of `.context/CORE_SKILLS.md` and `.context/ATOM_CHASSIS.md` into the Custom Instructions field
+4. For each new prompt, begin with: `Apply the ATOM and FORGE standards I provided in your custom instructions.`
+
+**For mainframe (COBOL/z/OS) projects:**
+Follow the detailed guide: [tool-setup/watsonx-code-assist/for-z-mainframe/setup-guide.md](tool-setup/watsonx-code-assist/for-z-mainframe/setup-guide.md)
+
+---
+
+### Option F: Web Portal (No IDE Required)
+
+**Best for:** Product managers, business analysts, workshop facilitators, and anyone who doesn't use an IDE.
+
+```bash
+open /path/to/forge/web-ui/index.html
+```
+
+Or deploy to GitHub Pages for team-wide browser access.
+
+See: [web-ui/README.md](web-ui/README.md)
+
+---
+
+## Step 3: Identify Your Project Type and Load Context
+
+Run this decision tree to identify the right project context files to load:
 
 ```
-Is there existing code that will be kept or transformed?
+Does your project have existing legacy code to preserve or transform?
+│
 ├── YES
-│   ├── Is the code COBOL, PL/1, Assembler, or JCL running on z/OS?
-│   │   ├── YES → Project Type: MAINFRAME MODERNIZATION
+│   ├── Is the code COBOL, PL/1, Assembler, or JCL on z/OS (mainframe)?
+│   │   ├── YES → MAINFRAME MODERNIZATION
+│   │   │         Load: .context/MODERNIZATION.md + .context/ATOM_CHASSIS.md
+│   │   │               + .context/COBOL_READING_GUIDE.md
+│   │   │         If payments domain: + .context/PAYMENTS_DOMAIN.md
 │   │   │         Context: project-contexts/mainframe-modernization/
 │   │   └── NO  → Is the goal to move it to a cloud platform?
-│   │             ├── YES → Project Type: CLOUD MIGRATION
+│   │             ├── YES → CLOUD MIGRATION
+│   │             │         Load: .context/CORE_SKILLS.md + .context/ATOM_CHASSIS.md
 │   │             │         Context: project-contexts/cloud-migration/
-│   │             └── NO  → Project Type: BROWNFIELD (DISTRIBUTED)
+│   │             └── NO  → BROWNFIELD
+│   │                       Load: .context/CORE_SKILLS.md + .context/ATOM_CHASSIS.md
 │   │                       Context: project-contexts/brownfield/
 └── NO (starting fresh)
-    ├── Is the primary deliverable exposing APIs over legacy data?
-    │   ├── YES → Project Type: API MODERNIZATION
-    │   │         Context: project-contexts/api-modernization/
-    └── NO  → Project Type: GREENFIELD
-              Context: project-contexts/greenfield/
+    ├── Is this a payments / card / PCI-DSS project?
+    │   ├── YES → load .context/PAYMENTS_DOMAIN.md (regardless of project type)
+    ├── Exposing APIs over legacy data?
+    │   ├── YES → API MODERNIZATION
+    │   │         Load: .context/CORE_SKILLS.md + .context/ATOM_CHASSIS.md
+    │   └── NO  → GREENFIELD
+    │             Load: .context/CORE_SKILLS.md + .context/ATOM_CHASSIS.md
+    │             Context: project-contexts/greenfield/
 ```
 
-**Special cases**:
-- If you are introducing event streaming (Kafka, MQ) into an existing synchronous system: also load `project-contexts/event-driven/`
-- If the project involves significant data migration or schema transformation: also load `project-contexts/data-modernization/`
-- Projects can have more than one context. Load all that apply.
+Add the relevant project context to your `CLAUDE.md` or `.github/copilot-instructions.md`:
+```bash
+# Add to your AI tool config file:
+# "For project-specific patterns, see project-contexts/mainframe-modernization/context.md"
+```
 
 ---
 
-## Step 3: Load Your Project Context Into Your AI Tool
+## Step 4: Load the FORGE Constitution
 
-Each project context file (`project-contexts/<type>/context.md`) contains a structured description of that project type's challenges, patterns, terminology, and AI behavior rules. Load it at the start of every AI session.
+**Mandatory for every AI session.**
 
-**For GitHub Copilot**: Paste the relevant sections of the context file into the `### Domain Context` section of your `.github/copilot-instructions.md`.
+The constitution (`constitution/01-core-principles.md`) defines 12 rules that prevent the most expensive AI mistakes.
 
-**For Claude Code**: Paste the relevant context into the `### Known Context` section of your `CLAUDE.md`, or reference the file explicitly at the start of a Claude session: `Load and apply the context in project-contexts/mainframe-modernization/context.md`
+**Claude Code:** The constitution is embedded in `CLAUDE.md` — loaded automatically every session.
 
-**For Cursor**: Add the key context points to the `## Project Context` section of your `.cursorrules` file.
+**GitHub Copilot:** The key rules are in `.github/copilot-instructions.md` — loaded automatically.
 
-**For watsonx / AWS Q**: Paste the context as the opening system message in your session or API call.
+**Cursor:** Loaded via `.cursorrules`.
 
----
-
-## Step 4: Know Your SDLC Stage
-
-Every prompt in FORGE is organized by SDLC stage. Before opening a prompt, identify which stage you are working in right now.
-
-Open `sdlc/README.md` for a full description of all 10 stages and their prompts.
-
-| If you are doing... | You are in Stage... |
-|---|---|
-| Assessing a legacy system, defining scope | Stage 1: Discovery |
-| Writing user stories, acceptance criteria, requirements | Stage 2: Requirements |
-| Designing the system, choosing technologies, writing ADRs | Stage 3: Architecture |
-| Designing APIs, data models, component interactions | Stage 4: Design |
-| Writing code, reviewing code, transforming legacy code | Stage 5: Development |
-| Writing tests, test plans, test automation | Stage 6: Testing |
-| Security review, threat modeling, dependency scanning | Stage 7: Security Review |
-| CI/CD, deployment pipelines, infrastructure as code | Stage 8: Deployment |
-| Monitoring, runbooks, incident response | Stage 9: Operations |
-| Post-release review, lessons learned | Stage 10: Retrospective |
+**Other tools / web sessions:** Open `constitution/01-core-principles.md` and paste as the first message:
+```
+Apply these 12 principles to every response in this session:
+[paste constitution content]
+```
 
 ---
 
-## Step 5: Pick Your Role-Specific Prompts
+## Step 5: Run Your First FORGE Workflow
 
-Navigate to `personas/` and open the directory for your role. Each persona directory contains:
+### For Claude Code users:
 
-- A `README.md` describing the prompts available
-- Stage-specific prompt files (e.g., `stage-05-development.md`, `stage-02-requirements.md`)
-- A `quick-reference.md` for common tasks
+```bash
+claude
+```
+Then type one of these to verify everything is working:
+```
+/analyze-legacy [paste a COBOL snippet or describe a legacy program]
+```
+```
+/generate-atom-service
+Service name: TransactionLimitService
+Business purpose: Checks whether a transaction amount exceeds configured spending limits
+API: POST /v1/limits/check — accepts TransactionRequest, returns LimitCheckResult
+Integrations: Reads limit config from PostgreSQL via JPA
+```
 
-If you are a developer working on a mainframe modernization project, load both:
-- `personas/developer/` (for code generation patterns)
-- `personas/mainframe-engineer/` (for COBOL-specific analysis patterns)
+### For GitHub Copilot / JetBrains users:
 
-Personas are not mutually exclusive. Tech leads typically combine their own persona with the developer persona.
+Open the Chat panel and type:
+```
+Using #file:.context/ATOM_CHASSIS.md and #file:.context/CORE_SKILLS.md,
+generate a Spring Boot service class for checking transaction spending limits.
+The service should use @AtomService, @CircuitBreaker for downstream calls,
+and structured logging. Include unit tests.
+```
+
+### For web portal users:
+
+1. Open `web-ui/index.html` in your browser
+2. Navigate to **Developer → Generate ATOM Service from Spec**
+3. Click **Copy Prompt**
+4. Paste into Claude.ai, watsonx, or any AI chat interface
+5. Fill in the `[BRACKETED]` sections
 
 ---
 
-## Step 6: Load the FORGE Constitution
+## First Session Template
 
-**This step is mandatory for every AI session.**
-
-The FORGE Constitution (`constitution/01-core-principles.md`) contains 10 non-negotiable rules that govern AI behavior. These rules prevent the most common and costly AI engineering mistakes: invented business logic, missed security constraints, untraceable outputs, and unreviewed code.
-
-**For Claude Code**: The constitution rules are embedded in your `CLAUDE.md` under `### FORGE Constitution — Always Active`. They are loaded automatically.
-
-**For GitHub Copilot**: The constitution rules are embedded in your `.github/copilot-instructions.md`. They are loaded automatically.
-
-**For Cursor**: The constitution rules are in your `.cursorrules`. They are loaded automatically.
-
-**For other tools / new sessions**: Open `constitution/01-core-principles.md` and paste its content as the first message in your AI session before any other prompts.
-
----
-
-## First Prompt Template
-
-Use this template to open any new AI session with FORGE. Fill in the bracketed sections before sending.
+Use this opening message for any new AI session (works in all tools):
 
 ```
-You are operating as an AI engineering assistant under the FORGE framework 
-(Framework for Orchestrated AI-Guided Engineering).
+You are operating as an AI engineering assistant under the FORGE framework.
 
-ALWAYS-ON RULES (FORGE Constitution):
-1. Do not invent undocumented business logic. If business rules are not 
-   explicitly stated in the provided source artifacts, flag the gap rather 
-   than assuming.
-2. Preserve existing business behavior unless a change is explicitly requested 
-   and approved.
-3. Separate facts (sourced from artifacts), assumptions (stated explicitly), 
-   recommendations (marked as such), and open questions (escalated to the human).
-4. Prefer modular, testable, observable code.
-5. Every output must be traceable to a source artifact, requirement, or declared 
-   assumption.
-6. Flag ambiguity before generating high-confidence outputs. Ask focused questions 
-   rather than proceeding with guesses.
-7. Never include secrets, credentials, customer PII, PAN, CVV, or regulated 
-   content in any prompt, output, or artifact.
-8. Default to incremental, reversible changes over big-bang transformations.
-9. Follow the project's approved architectural patterns and coding standards.
-10. Produce outputs that are reviewable and understandable by a human engineer 
-    with domain knowledge.
+CONTEXT FILES LOADED:
+- .context/CORE_SKILLS.md — engineering guardrails (security, quality, testing)
+- .context/ATOM_CHASSIS.md — ATOM microservices chassis patterns
+[- .context/MODERNIZATION.md — if this is a legacy modernization project]
+[- .context/COBOL_READING_GUIDE.md — if analyzing COBOL source code]
+[- .context/PAYMENTS_DOMAIN.md — if this is a payments/card/PCI-DSS project]
 
 PROJECT CONTEXT:
 - Project name: [PROJECT NAME]
-- Project type: [Greenfield | Brownfield | Mainframe Modernization | Cloud Migration | API Modernization]
-- Tech stack: [LANGUAGES, FRAMEWORKS, DATABASES]
+- Project type: [Greenfield | Brownfield | Mainframe Modernization | Cloud Migration]
+- Primary language: Java 17 / Spring Boot 3.x (ATOM)
 - Current SDLC stage: [Stage N: STAGE NAME]
-- My role: [PERSONA/ROLE]
+- My role: [Developer | Architect | QA | DevSecOps | etc.]
 
-TASK FOR THIS SESSION:
-[Describe what you want to accomplish in this session. Be specific. Reference 
-source artifacts by name if they exist. State any constraints or non-negotiables.]
+FORGE CONSTITUTION: Apply all 12 principles from constitution/01-core-principles.md.
+Especially: never invent business rules, separate facts from assumptions,
+flag ambiguity before generating code, and always generate tests alongside code.
 
-Before proceeding, confirm:
-1. You understand the FORGE constitution rules above.
-2. You understand the project context.
-3. You have identified any ambiguities in my task description that need 
-   clarification before you begin.
+TASK:
+[Describe what you need to accomplish in this session. Be specific.
+Reference any legacy source files, business rules, or specifications by name.]
+
+Confirm you understand the rules and ask any clarifying questions before starting.
 ```
 
 ---
 
-## Common Setup Mistakes to Avoid
+## Common Setup Mistakes
 
-| Mistake | Consequence | Correct Approach |
+| Mistake | Consequence | Fix |
 |---|---|---|
-| Skipping the constitution load | AI invents business rules, produces untraceable outputs | Always load constitution first, every session |
-| Pasting production data into prompts | Data leakage, compliance violation | Anonymize or synthesize test data. Never use production records. |
-| Using AI output without human review | Incorrect code in production | Every AI output must pass a human review gate before merge |
-| Skipping legacy analysis before code generation | Generated code misses business rules embedded in legacy code | Complete Stage 1 (Discovery) before Stage 5 (Development) |
-| Using one tool for everything | Suboptimal results for specialized tasks | Use watsonx Code Assist Z for COBOL, Copilot/Claude for Java, Q Developer for AWS |
-| Not committing `.github/copilot-instructions.md` or `CLAUDE.md` | Team members get different AI behavior | Commit tool config files to the repo so the whole team benefits |
+| Not copying `.context/` into the project repo | AI generates generic code, ignores ATOM patterns | Copy `.context/` first — always |
+| Skipping `[USER FILLS]` sections in CLAUDE.md | AI uses wrong package names, patterns | Fill in all sections before first use |
+| Not committing config files | Other team members get different AI behavior | Commit `CLAUDE.md`, `.github/copilot-instructions.md` |
+| Loading context once then skipping it | Each session starts without FORGE guardrails | Load constitution at the start of every new session |
+| Generating code before analysis | Misses embedded business rules | Complete Stage 1 (Discovery/Analysis) before Stage 5 (Development) |
+| Pasting production data into prompts | Data leakage, compliance violation | Anonymize all data. See `governance/ai-usage-policy.md` — never use real PAN, CVV, or customer records |
+| Putting API tokens directly in `.mcp.json` | Credentials committed to git | Always use `${ENV_VAR}` references — put actual values in `.env.local` which is git-ignored |
 
 ---
 
 ## Next Steps
 
-Once your tool is configured and your first session is running:
-
-1. **Run a pilot on one narrow module** — Don't try to modernize everything at once. Pick one COBOL program, one API endpoint, or one service to start.
-2. **Save your outputs as artifacts** — Use the templates in `templates/` to capture assumptions, decisions, and traceability links as you go.
-3. **Review before you merge** — Use the checklists in `guardrails/review-gates.md` before promoting any AI-generated code.
-4. **Update your knowledge pack** — As you discover project-specific patterns and rules, add them to a custom knowledge pack using `templates/knowledge-pack-template.md`.
+1. **Run the pre-engagement analysis** on your target codebase — [sdlc/00-pre-engagement/](sdlc/00-pre-engagement/README.md)
+2. **Pick your persona** — open your role-specific prompt pack from [personas/](personas/README.md)
+3. **Save outputs as artifacts** — use templates in [templates/](templates/) to capture assumptions, decisions, traceability
+4. **Review before merge** — use checklists in [governance/review-gates.md](governance/review-gates.md)
+5. **Set up MCP servers** — connect Claude Code to Jira, Confluence, and your database for live context — [tool-setup/mcp-servers/setup-guide.md](tool-setup/mcp-servers/setup-guide.md)
+6. **Read the AI usage policy** — understand data classification, code disclosure rules, and compliance requirements — [governance/ai-usage-policy.md](governance/ai-usage-policy.md)
+7. **Customize ATOM_CHASSIS.md** — add your organization's specific ATOM version, registry URL, and custom annotations
 
 ---
 
-*FORGE v1.0 — For detailed documentation on any topic, see the relevant directory's README.*
+*FORGE v2.0 — Quick Start Guide*

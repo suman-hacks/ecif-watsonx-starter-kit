@@ -1,188 +1,271 @@
-# GitHub Copilot Custom Instructions — FORGE v1.0
-
-> Copy this file to `.github/copilot-instructions.md` in your project repository.
-> Edit every section marked [USER FILLS] before committing.
-> GitHub Copilot reads this file automatically in VS Code and JetBrains IDEs.
+# GitHub Copilot Custom Instructions — FORGE v2.0 + ATOM
+#
+# SETUP INSTRUCTIONS:
+# 1. Copy this file to `.github/copilot-instructions.md` in your project repository
+# 2. Fill in every [USER FILLS] section with your project details
+# 3. Commit the file — GitHub Copilot reads it automatically in VS Code and JetBrains
+# 4. In Copilot Chat, reference context files with: #file:.context/ATOM_CHASSIS.md
+#
+# IMPORTANT: This file works best when your project also has:
+# - .context/CORE_SKILLS.md     (universal guardrails)
+# - .context/ATOM_CHASSIS.md    (ATOM chassis patterns)
+# - .context/MODERNIZATION.md   (legacy migration rules, if applicable)
 
 ---
 
 ## Project Identity
 
-**Project**: [USER FILLS — Project name]
-**Type**: [USER FILLS — Greenfield | Brownfield | Mainframe Modernization | Cloud Migration | API Modernization]
-**Primary language**: [USER FILLS — Java 17 | Python 3.12 | Go 1.22 | TypeScript 5 | etc.]
-**Framework**: [USER FILLS — Spring Boot 3.2 | FastAPI | Express | etc.]
-**Team**: [USER FILLS — Team name or department]
+**Project:** [USER FILLS — project name]
+**Type:** [USER FILLS — Greenfield | Brownfield | Mainframe Modernization | Cloud Migration | API Modernization]
+**Primary language:** Java 17
+**Framework:** Spring Boot 3.x (ATOM chassis)
+**Team:** [USER FILLS — team name or department]
 
 ---
 
 ## FORGE Framework Rules — Always Apply
 
-You are assisting an engineering team operating under the FORGE framework (Framework for Orchestrated AI-Guided Engineering). Apply these rules to every code suggestion, explanation, and chat response.
+You are assisting an engineering team operating under the FORGE framework with the ATOM microservices chassis. Apply these rules to every code suggestion, explanation, and chat response.
 
-**1. Never invent business logic.** If a business rule is needed but not present in the provided code or context, do not assume it. Flag the gap in a comment: `// FORGE: Business rule not found in context — verify before using.`
+**1. Never invent business logic.**
+If a business rule is needed but not present in the provided code or context, do not assume it. Flag the gap:
+`// FORGE [BR-GAP]: Business rule not found in context — verify before using.`
 
-**2. Preserve existing behavior.** When completing or modifying existing code, do not silently change behavior. If a behavioral change is required, add a comment: `// FORGE: BEHAVIORAL CHANGE — [describe what changed and why].`
+**2. Preserve existing behavior in modernization.**
+When completing or modifying existing code that originated from legacy systems, do not silently change behavior. If a behavioral change is required, annotate:
+`// FORGE [BEHAVIORAL CHANGE: CBD-NNN]: Legacy did X; modern does Y. Requires approval.`
 
-**3. Separate facts from assumptions.** In Copilot Chat responses, label information as FACT (if sourced from the codebase or context), ASSUMPTION (if inferred), or RECOMMENDATION (if suggested).
+**3. Separate facts from assumptions.**
+In chat responses, label: `FACT` (from provided code/context), `ASSUMPTION` (inferred), `RECOMMENDATION` (suggested approach).
 
-**4. Generate tests alongside code.** For every non-trivial class or function you generate, include or suggest corresponding unit tests. Tests must cover: happy path, boundary values, and error cases.
+**4. Generate tests alongside code.**
+For every non-trivial class or function you generate, include or suggest corresponding unit tests covering: happy path, boundary values, all business rules, and error cases.
 
-**5. Protect sensitive data.** Never suggest code that: (a) logs PII, PAN, CVV, credentials, or tokens; (b) transmits sensitive data without encryption; (c) stores credentials in code or configuration files checked into source control. Flag violations with: `// FORGE: [SECURITY CONCERN] — [describe the concern].`
+**5. Protect sensitive data.**
+Never suggest code that: logs PAN, CVV, SSN, credentials, or tokens; transmits sensitive data without encryption; stores credentials in code or configuration files.
+Flag violations: `// FORGE [SECURITY: SG-N] — [describe the concern]`
 
-**6. Follow architectural patterns.** See the `## Architectural Patterns` section below. Never suggest patterns that contradict the approved architecture. If the architecture is insufficient, note it with: `// FORGE: Architectural gap — consider an ADR for this.`
+**6. Follow ATOM architectural patterns.**
+See `## ATOM Patterns` section. Never suggest patterns that contradict ATOM architecture. If ATOM doesn't cover the scenario, note: `// FORGE [ARCH-GAP]: Consider an ADR for this pattern.`
 
-**7. Prefer modular, testable code.** Avoid static methods for logic that depends on state or external dependencies. Use dependency injection. Avoid deeply nested logic. Prefer small, named, single-purpose methods over anonymous lambdas for complex logic.
+**7. Prefer constructor injection.**
+Always use constructor injection (Lombok `@RequiredArgsConstructor`). Never suggest `@Autowired` field injection in production code.
 
-**8. Incremental over big-bang.** When suggesting refactors, prefer incremental steps that can be reviewed individually. Do not suggest large rewrites unless explicitly asked.
+**8. Structured logging only.**
+Always log with structured key-value pairs. Never `log.info("Processing " + id)`. Always:
+`log.info("Processing payment", "operation", "processPayment", "transactionId", id)`
+Never log PAN, CVV, passwords, or tokens.
 
 ---
 
-## Architectural Patterns
+## ATOM Patterns — Required for All Generated Code
 
-[USER FILLS — Replace the examples below with your project's actual patterns.]
+When generating or completing Java code, always apply these patterns.
 
-### Package / Module Structure
+### Required Annotations
+```java
+// Application service — always @AtomService, not @Service
+@AtomService
+@Slf4j
+@RequiredArgsConstructor
+public class PaymentAuthorizationService {
+    private final AccountRepository accountRepository;  // constructor injection
+    // ...
+}
+
+// Repository — always @AtomRepository, not @Repository
+@AtomRepository
+public class JpaAccountRepository implements AccountRepository { }
+
+// Controller — always returns ResponseEntity<ApiResponse<T>>
+@RestController
+@RequestMapping("/v1")
+public class AuthorizationController {
+
+    @PostMapping("/authorizations")
+    public ResponseEntity<ApiResponse<AuthorizationResponse>> authorize(
+            @RequestBody @AtomValidated AuthorizationRequest request) {
+        // ...
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+}
 ```
-[USER FILLS — e.g.,
-com.example.service
-  ├── domain/        ← Entities, value objects, domain services, port interfaces
-  ├── application/   ← Use case orchestration, application services
-  ├── infrastructure/← Adapters: REST controllers, JPA repositories, Kafka listeners
-  └── configuration/ ← Spring @Configuration classes
-]
+
+### Circuit Breaker — Required for All Downstream Calls
+```java
+@CircuitBreaker(name = "fraud-scoring-service", fallbackMethod = "fraudScoringFallback")
+@Retry(name = "fraud-scoring-service")
+public FraudScore score(FraudScoringRequest request) {
+    return fraudClient.score(request);
+}
+
+// Fallback must never throw — return safe default
+private FraudScore fraudScoringFallback(FraudScoringRequest request, Exception ex) {
+    log.warn("Fraud scoring unavailable — using fallback",
+        "operation", "fraudScoringFallback", "reason", ex.getMessage());
+    return FraudScore.defaultScore();
+}
 ```
 
-### Dependency Direction
-[USER FILLS — e.g., "Dependency direction: infrastructure → application → domain. The domain layer must have no dependencies on Spring, JPA, or any infrastructure framework. Use interfaces in the domain layer for all external dependencies."]
+### Package Structure (Required)
+```
+com.[org].[domain].[service]
+├── api/controller/     ← REST controllers
+├── api/dto/            ← Immutable DTOs (@Value)
+├── api/mapper/         ← MapStruct mappers
+├── application/service/ ← @AtomService classes
+├── domain/model/        ← Entities, value objects
+├── domain/port/         ← Interface definitions only
+├── infrastructure/persistence/ ← @AtomRepository
+└── infrastructure/client/     ← External HTTP clients
+```
 
-### API Design
-[USER FILLS — e.g., "REST APIs follow OpenAPI 3.1. Use Spring MVC @RestController. All endpoints return ResponseEntity<>. Error responses use RFC 7807 ProblemDetail format. No business logic in controllers — delegates to application service."]
+**Domain layer rule:** Zero framework imports (no Spring, JPA, Kafka) in `domain/`.
 
-### Data Access
-[USER FILLS — e.g., "All database access goes through Spring Data JPA repositories. No raw SQL outside of @Query annotations in repository interfaces. Entity classes are in infrastructure.persistence.entity — never exposed outside the infrastructure layer."]
+### Logging (Required)
+```java
+// CORRECT — structured key-value pairs
+log.info("Authorization processed",
+    "operation", "authorize",
+    "transactionId", request.getTransactionId(),
+    "decision", result.getDecision(),
+    "durationMs", elapsed);
 
-### Error Handling
-[USER FILLS — e.g., "All service exceptions extend DomainException (unchecked). A global @ControllerAdvice maps exceptions to HTTP responses. Never swallow exceptions silently — always log at WARN or ERROR with correlation ID."]
-
-### Logging
-[USER FILLS — e.g., "Use SLF4J with Logback. Structured JSON logging in production. Always include: correlationId, userId (if available), operation name. Never log PAN, CVV, passwords, or tokens. Log at entry and exit of service-layer methods at DEBUG level."]
+// WRONG — never do this
+log.info("Authorized transaction " + txId + " with result " + result);
+log.info("Card: " + pan);  // NEVER log PAN
+```
 
 ---
 
 ## Code Generation Preferences
 
 ### Style
-- [USER FILLS — e.g., "Follow Google Java Style Guide. Max line length: 120 characters."]
-- [USER FILLS — e.g., "Use `var` for local variables where the type is obvious from the right-hand side."]
-- [USER FILLS — e.g., "Prefer immutable objects (final fields, no setters on domain entities). Use Lombok @Value for value objects, @Builder for complex constructors."]
+- Java 17 LTS — use records, text blocks, sealed interfaces, pattern matching where appropriate
+- Google Java Style Guide — 120-char max line length
+- Lombok: `@Value` for immutable classes, `@Builder` for complex construction, `@Slf4j` for logging, `@RequiredArgsConstructor` for DI
+- `final` on all fields, parameters, and local variables that are not reassigned
+- Method length: max 30 lines. Extract logic into well-named private methods.
 
 ### Naming
-- Classes: [USER FILLS — e.g., "PascalCase. Suffix: Service, Repository, Controller, Adapter, Port, Event, Command, Query"]
-- Methods: [USER FILLS — e.g., "camelCase. Commands: verb-first (processPayment). Queries: noun or get/find-prefixed (findTransactionById)"]
-- Variables: [USER FILLS — e.g., "camelCase. Boolean variables: is/has/can prefix (isAuthorized, hasExpired)"]
-- Constants: [USER FILLS — e.g., "SCREAMING_SNAKE_CASE in Constants class per package"]
-- Database columns: [USER FILLS — e.g., "snake_case, prefixed by domain area"]
+- Classes: PascalCase — suffixes: `Service`, `DomainService`, `Repository`, `Controller`, `Client`, `Adapter`, `Mapper`, `Event`, `Command`, `Query`, `Config`
+- Methods: camelCase — commands verb-first (`processAuthorization`), queries noun or `get`/`find`-prefixed
+- Variables: camelCase — booleans with `is`/`has`/`can` prefix
+- Constants: `SCREAMING_SNAKE_CASE` in dedicated `Constants` class
+- Tables: snake_case, domain-prefixed: `authz_transactions`
+- Kafka topics: kebab-case, env-prefixed: `prod.authz.transaction-authorized`
 
-### Testing
-- Framework: [USER FILLS — e.g., "JUnit 5 + Mockito 5 + AssertJ"]
-- Test naming: [USER FILLS — e.g., "methodName_scenario_expectedBehavior"]
-- Test structure: [USER FILLS — e.g., "Given/When/Then comments in test body (AAA pattern)"]
-- Integration tests: [USER FILLS — e.g., "Use @SpringBootTest with Testcontainers for database and messaging dependencies"]
-- Do NOT use: [USER FILLS — e.g., "PowerMock, JUnit 4, Hamcrest (AssertJ only)"]
+### Testing (Required with Generated Code)
+- Framework: JUnit 5 + Mockito 5 + AssertJ
+- Naming: `methodName_scenario_expectedBehavior`
+- Structure: Arrange / Act / Assert with explicit AAA comments
+- Always cover: happy path, all documented business rules, boundary values, error paths
+- Integration: @SpringBootTest + Testcontainers (never mock the database)
+- Do NOT use: PowerMock, JUnit 4, Hamcrest
 
 ---
 
-## What Copilot Should Never Do in This Project
+## What Copilot Must Never Do in This Project
 
-- Never generate code with hardcoded credentials, API keys, passwords, or connection strings
-- Never suggest logging PII, PAN, CVV, authentication tokens, or any sensitive customer data
-- Never generate code that bypasses the security layer (e.g., skipping authentication checks for "simplicity")
-- Never introduce new third-party libraries without a comment noting that an ADR is required
-- Never change database schema without a migration script (Flyway/Liquibase)
-- Never suggest patterns that violate the dependency direction rules above (e.g., domain layer importing from Spring)
-- Never generate code that catches and silently discards exceptions (`catch (Exception e) {}` — always log)
-- Never suggest implementing authorization logic inside business service methods — authorization belongs in the security layer
-- [USER FILLS — add project-specific prohibitions]
+- Generate code with hardcoded credentials, API keys, passwords, or URLs
+- Suggest logging PAN, CVV, authentication tokens, passwords, or sensitive PII
+- Generate code that bypasses authentication or authorization checks "for simplicity"
+- Introduce new third-party libraries without noting that an ADR is required
+- Suggest raw SQL outside of repository interfaces
+- Generate `catch (Exception e) {}` — always log or rethrow with context
+- Use `@Autowired` field injection — always constructor injection
+- Return raw DTOs from controllers — always `ResponseEntity<ApiResponse<T>>`
+- Generate code in the domain layer that imports Spring, JPA, or Kafka
+- Create hardcoded configuration — always use environment variables via `@Value("${...}")`
+- [USER FILLS: add project-specific prohibitions]
+
+---
+
+## How to Use Context Files in Copilot Chat
+
+In VS Code Copilot Chat:
+```
+# Reference specific context files:
+Using #file:.context/ATOM_CHASSIS.md, generate a new ATOM service for fraud detection.
+
+# Reference the whole project:
+@workspace What FORGE rules are you following for this project?
+
+# Reference existing code:
+Using #file:src/main/java/com/example/service/AuthorizationService.java as a model,
+generate a similar service for limit checking. Apply #file:.context/ATOM_CHASSIS.md.
+```
+
+In JetBrains (IntelliJ IDEA + GitHub Copilot plugin):
+- Open the Copilot Chat panel
+- The `.github/copilot-instructions.md` is automatically loaded
+- For additional context, paste content from `.context/ATOM_CHASSIS.md` into the chat
 
 ---
 
 ## Domain Context
 
-[USER FILLS — Provide project-specific domain knowledge that helps Copilot understand your business domain. This is the most important section for domain-specific code quality. The more you fill in here, the better suggestions you will get.]
+[USER FILLS — This section has the most impact on code quality. Be specific.]
 
 ### Business Domain
-[USER FILLS — e.g., "This is a payment card authorization service. The core function is to receive an authorization request from an acquiring network, apply spending limits, velocity controls, and fraud rules, and return an approve or decline response within 150ms."]
+[USER FILLS: e.g., "Payment card authorization service. Receives ISO 8583 authorization requests from Visa/Mastercard networks via IBM MQ, applies spending limits and business rules, and returns approve/decline within 150ms."]
 
 ### Key Domain Concepts
-[USER FILLS — e.g.,
-- **Authorization**: A real-time approve/decline decision on a payment transaction
-- **PAN**: Primary Account Number — the card number. Always masked in logs (show last 4 digits only)
-- **Clearing**: Post-authorization reconciliation — separate from authorization, handled by a different service
-- **Limit**: A configurable threshold (daily spend limit, per-transaction limit, velocity limit)
-- **Merchant Category Code (MCC)**: A 4-digit code identifying the type of merchant. Used in business rules.
+[USER FILLS: e.g.,
+- **Authorization** — A real-time approve/decline decision on a card transaction
+- **PAN** — Primary Account Number (16-digit card number). Always mask in logs (last 4 only).
+- **MCC** — Merchant Category Code (4-digit). Used in spending restrictions.
+- **Stand-in** — Processing when the issuer host is unavailable. Fallback rules apply.
+- **Velocity limit** — Rule based on transaction frequency (e.g., max 5 transactions per hour)
 ]
 
-### Key Business Rules
-[USER FILLS — List the most important business rules so Copilot can validate generated code against them. e.g.,
-- An authorization must be declined if the remaining balance is insufficient
-- Daily spend limits reset at midnight UTC
-- A transaction may not exceed the single-transaction limit regardless of available balance
-- Contactless transactions above [threshold] require PIN verification
+### Key Business Rules (Summary)
+[USER FILLS: List 5–10 most important business rules so Copilot validates generated code.
+e.g.,
+- An authorization must be declined if available balance < transaction amount (BR-001)
+- Daily spend limits reset at 00:00 UTC (BR-012)
+- Contactless transactions above $100 require PIN (BR-045)
+- International transactions require country code validation (BR-023)
 ]
 
 ### External Integrations
-[USER FILLS — e.g.,
-- **Visa/Mastercard Network**: Receives ISO 8583 authorization requests via IBM MQ
-- **Core Banking System**: Provides real-time balance via synchronous REST API (SLA: < 50ms)
-- **Fraud Service**: Asynchronous fraud scoring via Kafka — does not block authorization
-- **Notification Service**: Asynchronous push notifications via Kafka — does not block authorization
+[USER FILLS: e.g.,
+- **Visa/MC Network** — ISO 8583 requests via IBM MQ (inbound)
+- **Core Banking** — Synchronous REST for real-time balance (latency target: < 50ms)
+- **Fraud Service** — Asynchronous Kafka event, does not block authorization
+- **Notification Service** — Asynchronous Kafka event, does not block authorization
 ]
 
 ---
 
-## Key Directories and Files
-
-[USER FILLS — Map key directories to their purpose so Copilot understands the project structure. Example:]
+## Key Directories
 
 | Path | Purpose |
 |---|---|
-| `src/main/java/com/example/domain/` | Domain model and business logic. No framework dependencies. |
-| `src/main/java/com/example/application/` | Use case orchestration. Calls domain services and infrastructure ports. |
-| `src/main/java/com/example/infrastructure/rest/` | REST controllers. No business logic here. |
-| `src/main/java/com/example/infrastructure/persistence/` | JPA entities and repositories. |
-| `src/test/java/` | All tests. Mirror the main package structure. |
-| `docs/architecture/` | ADRs and architecture diagrams. Reference before adding new patterns. |
-| `docs/business-rules/` | Extracted and validated business rules. Reference before coding. |
-| `legacy-artifacts/` | Read-only legacy COBOL source. Never generate code that modifies this. |
+| `.context/` | FORGE Context Engine — load in every AI session |
+| `src/main/java/.../api/` | Controllers and DTOs — no business logic |
+| `src/main/java/.../application/` | ATOM services — business logic orchestration |
+| `src/main/java/.../domain/` | Domain model — zero framework dependencies |
+| `src/main/java/.../infrastructure/` | DB, messaging, external client adapters |
+| `docs/business-rules/` | Extracted BR-NNN register — reference before coding |
+| `docs/architecture/` | ADRs — reference before adding new patterns |
+| `legacy-artifacts/` | READ ONLY — source COBOL. Never generate code that modifies this. |
+| `traceability/` | Assumption register and decision log |
 
 ---
 
-## Dependencies in Use
+## Pre-Generation Checklist
 
-[USER FILLS — List key approved dependencies so Copilot suggests the right libraries. Example:]
+Before accepting any Copilot suggestion for production code:
 
-- Spring Boot 3.2 (spring-boot-starter-web, spring-boot-starter-data-jpa, spring-boot-starter-security, spring-boot-starter-actuator)
-- Spring Kafka 3.x for Kafka integration
-- PostgreSQL (via spring-boot-starter-data-jpa + postgresql driver)
-- Flyway for database migrations
-- Lombok for boilerplate reduction (@Value, @Builder, @Slf4j)
-- MapStruct for DTO-to-domain mapping
-- Testcontainers for integration tests
-- Resilience4j for circuit breaking and retry
-- [USER FILLS — add your actual dependencies]
-
----
-
-## Review Checklist
-
-Before accepting any Copilot suggestion for production code, verify:
-
-- [ ] No hardcoded credentials or sensitive data
-- [ ] No PII/PAN logged
-- [ ] Follows dependency direction (domain ← application ← infrastructure)
-- [ ] Exception handling is present and meaningful
-- [ ] Unit tests accompany the code (or are suggested)
-- [ ] No new libraries introduced without ADR
-- [ ] Structured logging with correlation ID
-- [ ] Conforms to naming conventions above
+- [ ] No hardcoded credentials or URLs anywhere
+- [ ] No PAN, CVV, SSN, or tokens logged
+- [ ] `@AtomService` used (not plain `@Service`)
+- [ ] `@AtomRepository` used (not plain `@Repository`)
+- [ ] Controller returns `ResponseEntity<ApiResponse<T>>`
+- [ ] `@CircuitBreaker` on all downstream HTTP calls
+- [ ] Constructor injection only (no `@Autowired`)
+- [ ] Domain layer has zero Spring/JPA/Kafka imports
+- [ ] Structured logging with correlation ID context
+- [ ] Unit tests included with business rule coverage
+- [ ] Any behavioral change from legacy is annotated `[BEHAVIORAL CHANGE: CBD-NNN]`
